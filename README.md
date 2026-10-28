@@ -38,3 +38,7 @@ The `DATA` KV namespace holds form copies, course progress, rate limits and the 
 - Pages: `/insights` (latest), `/insights/<date>` (each edition), `/insights/review` (private, not indexed).
 
 Local testing: put test values in `.dev.vars` (ignored by git), then `npm run build` and `npx astro preview`.
+
+## Deploy on Cloudflare
+
+Workers and Pages, Import a repository, this repo. Production branch `build/astro-site`, build command `npm run build`, deploy command `npx wrangler deploy`.
