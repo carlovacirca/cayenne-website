@@ -1,6 +1,5 @@
 ---
-import Base from '../layouts/Base.astro';
-import head from '../html/audit-results.head.html?raw';
-import body from '../html/audit-results.body.html?raw';
+/* The audit is a phone call now, so there is no results page: old links go to the booking page */
+export const prerender = false;
+return Astro.redirect('/audit', 301);
 ---
-<Base title={"Your AI audit \u00b7 Cayenne"} description={"An example AI audit report for a fictional dental practice: the 9 hours a week AI could save, the 3 easiest ideas first, and what to do next."} page={"audit-results.html"} head={head} body={body} />

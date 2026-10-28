@@ -573,7 +573,7 @@
   }
   function courseHTML() {
     var stages = [
-      ['The basics', 'Module 1 · No sign-up', 'What AI is, the three chatbots worth knowing, and your first win.'],
+      ['The basics', 'Module 1', 'What AI is, the three chatbots worth knowing, and your first win.'],
       ['Your everyday work', 'Modules 2 to 5', 'Quotes, replies, posts and admin, done in minutes instead of hours.'],
       ['Automations', 'Modules 6 and 7', 'Let AI handle the repeat jobs while you get on with the real work.'],
       ['Your plan', 'Module 8', 'A 90-day plan for your business, so the new habits stick.']
@@ -592,10 +592,10 @@
     return '<section class="snap sec s-audit" id="audit"><div class="heat" aria-hidden="true"><i class="h1"></i></div><div class="wrap split">' +
       '<div><span class="sec-k"><i aria-hidden="true"></i>Free AI audit</span>' +
       '<h2 class="sec-h">Not sure where AI fits? <em>We’ll show you.</em></h2>' +
-      '<p class="sec-sub">Tell us how your business runs. We find where AI saves you time or wins you work, and put real numbers on it.</p>' +
-      '<ul class="ticks"><li>' + IC.check + '<span><b>Short and simple.</b> A few questions about how you work today.</span></li><li>' + IC.check + '<span><b>Real numbers.</b> The hours you could save, worked out for you.</span></li><li>' + IC.check + '<span><b>A clear plan.</b> Use it yourself, or have us build it for you.</span></li></ul>' +
+      '<p class="sec-sub">Book a free 30-minute call. We find where AI saves you time or wins you work, and put real numbers on it.</p>' +
+      '<ul class="ticks"><li>' + IC.check + '<span><b>Pick a time.</b> The calendar is right there, on the page.</span></li><li>' + IC.check + '<span><b>Real numbers.</b> The hours you could save, worked out with you.</span></li><li>' + IC.check + '<span><b>A clear plan.</b> Use it yourself, or have us build it for you.</span></li></ul>' +
       '<div class="cta-row"><a class="btn-create" href="/audit">Get a free AI audit ' + IC.arrow + '</a><span class="note">Free · No obligation</span></div></div>' +
-      '<div class="report reveal" aria-label="Example audit report"><div class="rp-top"><span class="rp-k"><i aria-hidden="true"></i>AI audit</span><span class="rp-ex">Example report</span></div>' +
+      '<div class="report reveal" aria-label="Example audit numbers"><div class="rp-top"><span class="rp-k"><i aria-hidden="true"></i>AI audit</span><span class="rp-ex">Example</span></div>' +
       '<div class="rp-biz"><span class="bc-map">' + IC.map + '</span><div><b>Harbourside Dental</b><span>Dental practice · Brighton</span></div></div>' +
       '<div class="rp-big"><span class="rp-num">9<small>h</small></span><span class="rp-lbl">a week AI could save this practice (estimate)</span></div>' +
       '<ul class="rp-bars">' + bars.map(function (b) { return '<li><span>' + b[0] + '</span><b>' + b[1] + '</b><span class="bar"><i style="width:' + (b[2] * 100) + '%"></i></span></li>'; }).join('') + '</ul>' +
@@ -621,7 +621,7 @@
       ['I’m not techy. Can I do this?', 'Yes. If you can send an email or a text, you can use AI. Every lesson is in plain English and uses your own business as the example.'],
       ['Which AI tools will I learn?', 'ChatGPT, Claude, Gemini, Perplexity and Copilot. You will learn what each one is best at, and which to reach for on each job.'],
       ['Is my business data safe?', 'We only ask for your business name and what you want help with. The course also shows you what never to paste into a chatbot, and how to keep customer details private.'],
-      ['How long does it take?', 'Each lesson takes 5 to 10 minutes. Module 1 is ready the moment you create your course, with no sign-up.'],
+      ['How long does it take?', 'Each lesson takes 5 to 10 minutes. Module 1 is ready the moment you create your course.'],
       ['Do I have to pay for ChatGPT or Claude?', 'No. The free versions are enough for the whole course. If you want more later, the course helps you decide whether a paid plan is worth it.']
     ];
     return '<section class="snap sec s-faq" id="faq"><div class="heat" aria-hidden="true"><i class="h1"></i></div><div class="wrap center">' +
@@ -648,7 +648,7 @@
   function tocList(c) {
     return '<ol class="md-toc">' + c.mods.map(function (m) {
       var cls = m.n === 1 ? 'cur' + (S.done1 ? ' fin' : '') : (m.locked ? 'lock' : 'open2');
-      return '<li class="' + cls + '"><span class="md-tn">' + (m.n === 1 && S.done1 ? IC.checkSm : m.n) + '</span><span>' + esc(m.title) + '</span>' + (m.locked ? IC.lock : '') + '</li>';
+      return '<li class="' + cls + '"><span class="md-tn">' + (m.n === 1 && S.done1 ? IC.checkSm : m.n) + '</span><span>' + esc(m.title) + '</span></li>';
     }).join('') + '</ol>';
   }
   function moduleHTML() {

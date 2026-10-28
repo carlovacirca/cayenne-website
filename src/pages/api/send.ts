@@ -3,7 +3,7 @@ import type { APIRoute } from 'astro';
 import { json, clip, sendMail, keep, limited } from '../../lib/server';
 export const prerender = false;
 
-const KINDS: Record<string, string> = { contact: 'New message', audit: 'New free AI audit', waitlist: 'Build on Cayenne waitlist', partner: 'Partner application', tips: 'Weekly tip sign-up' };
+const KINDS: Record<string, string> = { contact: 'New message', audit: 'Free AI audit call booked', waitlist: 'Build on Cayenne waitlist', partner: 'Partner application', tips: 'Weekly tip sign-up' };
 
 export const POST: APIRoute = async ({ request }) => {
   if (await limited(request, 'send', 12, 3600)) return json({ ok: false, error: 'Too many messages, try again later' }, 429);

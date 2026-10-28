@@ -239,4 +239,110 @@
     .s-q .foot-in > div:not(.foot-brand){display:none}
   }
 }
+
+/* =========================================================================================
+   THE AUDIT IS A PHONE CALL: pick a time on the calendar, give three details, add more if you like
+   ========================================================================================= */
+.bk-split{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,640px);gap:clamp(28px,5cqi,72px);align-items:center;width:100%;text-align:left}
+.bk-copy{display:flex;flex-direction:column;align-items:flex-start}
+.bk-copy .hero-h{max-width:12ch}
+.bk-copy .ticks li{text-align:left}
+.bk-split{align-items:center}
+.cal.card{align-self:center;height:auto}
+/* ---------- the booking calendar ---------- */
+.cal.card{max-width:640px;margin-top:0}
+.cal .card-in{padding:clamp(14px,2.2svh,22px) clamp(14px,2cqi,22px) clamp(14px,2.2svh,20px)}
+.cal-top{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.cal-top b{font-size:17px}
+.cal-top small{display:block;font-size:13px;color:var(--mut)}
+.cal-nav{display:inline-flex;align-items:center;gap:6px}
+.cal-nav button{display:grid;place-items:center;width:38px;height:38px;border-radius:50%;border:1px solid var(--line2);background:#FFFFFF;color:var(--ink);cursor:pointer}
+.cal-nav button:disabled{opacity:.35;cursor:default}
+.cal-nav span{min-width:9.5em;text-align:center;font-size:14px;font-weight:600;color:var(--ink2)}
+/* desktop: the whole week on one timeline, so the gaps between free times show */
+.cal-grid{position:relative;display:grid;grid-template-columns:44px repeat(5,minmax(0,1fr));gap:0 8px;margin-top:12px}
+.cal-dh{padding:6px 0 8px;text-align:center;border-bottom:1px solid var(--line)}
+.cal-dh b{display:block;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--mut)}
+.cal-dh span{display:block;font-size:19px;font-weight:650;line-height:1.2}
+.cal-dh small{display:block;font-size:11.5px;color:var(--mut)}
+.cal-times{position:relative;height:var(--ch,330px)}
+.cal-times span{position:absolute;right:4px;transform:translateY(-50%);font-size:11.5px;color:var(--mut);font-variant-numeric:tabular-nums}
+.cal-col{position:relative;height:var(--ch,330px);background:repeating-linear-gradient(to bottom,transparent 0,transparent calc(var(--ch,330px) / 4 - 1px),var(--line) calc(var(--ch,330px) / 4 - 1px),var(--line) calc(var(--ch,330px) / 4))}
+.slot{position:absolute;left:0;right:0;display:flex;align-items:center;justify-content:center;height:34px;border-radius:12px;border:1.5px solid #CFE6D6;background:#F1F8F3;color:#17543A;font:600 14px var(--ui);font-variant-numeric:tabular-nums;cursor:pointer;transition:background .2s,border-color .2s,color .2s,transform .2s,box-shadow .2s}
+.slot:hover{border-color:var(--go);transform:translateY(-1px);box-shadow:0 10px 18px -12px rgba(20,110,60,.55)}
+.slot[aria-pressed="true"]{background:var(--go);border-color:var(--go);color:#FFFFFF}
+.slot:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.cal-days{display:none}
+.cal-list{display:none}
+.cal-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:12px;font-size:13px;color:var(--mut)}
+.cal-foot .lg{display:inline-flex;align-items:center;gap:7px}
+.cal-foot .lg i{width:14px;height:14px;border-radius:5px;border:1.5px solid #CFE6D6;background:#F1F8F3}
+/* step 2: your details */
+.cal-form{display:grid;gap:10px;margin-top:4px}
+.cal-when{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border-radius:16px;background:var(--okbg);color:var(--ok)}
+.cal-when b{display:block;font-size:16.5px;color:#14472F}
+.cal-when small{display:block;font-size:13px}
+.cal-when button{border:0;background:none;color:var(--ok);font:600 14px var(--ui);text-decoration:underline;cursor:pointer}
+.cal-f2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.cal-form label{display:grid;gap:5px;font-size:13.5px;font-weight:600;color:var(--ink2)}
+.cal-form input{height:46px;padding:0 14px;border-radius:14px;border:1.5px solid var(--line2);background:#FFFFFF;font:500 16px var(--ui);color:var(--ink)}
+.cal-form input:focus{outline:none;border-color:var(--ink);box-shadow:0 0 0 4px var(--ring)}
+.cal-help{font-size:13.5px;font-weight:600;color:var(--ink2)}
+.cal-help .crow{justify-content:flex-start;margin-top:6px}
+.cal-help .ch{height:38px;font-size:13.5px;padding:0 12px 0 6px}
+.cal-help .ch .ch-ic{width:24px;height:24px}
+.cal-form .btn-create{width:100%;height:54px;font-size:17px;margin-top:4px}
+.cal-fine{margin:0;font-size:12.5px;color:var(--mut);text-align:center}
+/* step 3: booked */
+.cal-done{display:grid;justify-items:center;gap:8px;padding:clamp(18px,4svh,40px) 8px;text-align:center}
+.cal-done > i{display:grid;place-items:center;width:58px;height:58px;border-radius:50%;background:var(--go);color:#FFFFFF;box-shadow:0 0 0 8px rgba(30,123,69,.12)}
+.cal-done b{font-size:22px;margin-top:8px}
+.cal-done p{margin:0;max-width:30ch;color:var(--ink2)}
+.cal [data-step]{display:none}
+.cal[data-at="pick"] [data-step="pick"],.cal[data-at="done"] [data-step="done"]{display:block}
+.cal[data-at="form"] [data-step="form"]{display:grid}
+
+
+/* the optional extras, folded away until wanted */
+.cal-form [data-step-scroll]{display:grid;gap:10px}
+.bk-more{border-radius:16px;border:1px dashed var(--line2);background:#FFFFFF}
+.bk-more > summary{display:flex;align-items:center;justify-content:space-between;gap:10px;height:46px;padding:0 14px;list-style:none;cursor:pointer;font-size:14.5px;font-weight:600;color:var(--ink2)}
+.bk-more > summary::-webkit-details-marker{display:none}
+.bk-more > summary small{font-weight:500;color:var(--mut)}
+.bk-more > summary .pm{display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:var(--soft);font-size:17px;line-height:1;transition:transform .25s}
+.bk-more[open] > summary .pm{transform:rotate(45deg)}
+.bk-more .bk-in{display:grid;gap:10px;padding:0 14px 14px}
+.cal-form textarea{min-height:64px;padding:10px 14px;border-radius:14px;border:1.5px solid var(--line2);background:#FFFFFF;font:500 15.5px/1.4 var(--ui);color:var(--ink);resize:vertical}
+.cal-form textarea:focus{outline:none;border-color:var(--ink);box-shadow:0 0 0 4px var(--ring)}
+.cal-form .opt{font-weight:500;color:var(--mut)}
+.cal-form .req{color:var(--red)}
+.cal-form .bk-err{margin:0;font-size:14px;font-weight:600;color:var(--red)}
+.cal [data-step="form"]{max-height:min(600px,calc(100svh - 190px));overflow-y:auto;overscroll-behavior:contain;padding-right:2px}
+@media (max-height:820px){.cal-times,.cal-col{--ch:270px}}
+@container app (max-width:860px){
+  .bk-split{grid-template-columns:minmax(0,1fr);gap:14px}
+  .bk-copy{align-items:center;text-align:center}
+  .bk-copy .hero-h{max-width:none}
+  .bk-copy .ticks{display:none}
+  .cal-grid{display:none}
+  .cal-days{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;margin-top:12px}
+  .cal-days button{display:grid;justify-items:center;gap:1px;padding:8px 0;border-radius:14px;border:1.5px solid var(--line);background:#FFFFFF;font:600 12px var(--ui);color:var(--mut);cursor:pointer}
+  .cal-days button b{font-size:18px;color:var(--ink)}
+  .cal-days button small{font-size:10.5px;color:var(--go)}
+  .cal-days button[aria-selected="true"]{border-color:var(--ink);box-shadow:0 0 0 1px var(--ink)}
+  .cal-list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:12px;min-height:40px;align-content:start}
+  .cal-list .slot{position:static;height:40px}
+  .cal-f2{grid-template-columns:1fr}
+  .a-hero:has(.cal[data-at="form"]) .bk-copy,.a-hero:has(.cal[data-at="done"]) .bk-copy{display:none}
+  .cal [data-step="form"]{max-height:calc(100svh - 160px)}
+  .cal-form .cal-fine{display:none}
+}
+@container app (max-width:860px){@media (max-height:760px){
+  .bk-copy .lede{font-size:15.5px}
+  .cal-foot{display:none}
+  .cal-form{gap:7px}.cal-f2{gap:7px}.cal-form input{height:40px;border-radius:12px}.cal-form label{gap:3px;font-size:12.5px}
+  .cal-when{padding:8px 12px}.cal-when b{font-size:15px}
+  .cal-form .btn-create{height:48px;font-size:16px}
+}}
+
 </style>
