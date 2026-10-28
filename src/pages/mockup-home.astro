@@ -1,0 +1,8 @@
+---
+/* MOCKUP for review: not linked from the live pages, not indexed */
+import Base from '../layouts/Base.astro';
+import head from '../html/index.head.html?raw';
+import mk from '../html/mockup.head.html?raw';
+import body from '../html/mockup-home.body.html?raw';
+---
+<Base title="Mockup: home · Cayenne" description="Mockup for review." page="mockup-home.html" head={head + mk} body={body} />

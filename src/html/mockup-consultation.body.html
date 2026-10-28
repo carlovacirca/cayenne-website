@@ -1,0 +1,161 @@
+
+<div id="stage"><div id="app" class="app">
+
+  <!-- 1 · book the call -->
+  <section class="snap hero sec s-book intro" id="top">
+    <div class="heat" aria-hidden="true"><i class="h1"></i><i class="h2"></i><i class="h3"></i></div>
+    <header class="nav"><div class="nav-in wrap"><a class="brand" href="/mockup-home" aria-label="Cayenne home"><img src="/img/cayenne.png" alt="Cayenne" width="128" height="36"></a>
+    <nav class="links" aria-label="Main"><a href="/course">Course</a><a href="/mockup-consultation">Free consultation</a><a href="/mockup-services">Services</a><a href="/about">About</a></nav>
+    <a class="signin" href="/signin">Sign in</a><button type="button" class="menu" aria-label="Menu"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h16M4 16h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button></div></header>
+    <div class="hero-main wrap mk-split wide">
+      <div class="mk-c-copy">
+        <span class="sec-k in"><i aria-hidden="true"></i>Free consultation</span>
+        <h1 class="hero-h in d1">Book your free <em>30-minute call.</em></h1>
+        <p class="lede in d2">Talk your business through with one of our team. Within two working days you get a written plan, yours to keep.</p>
+        <ul class="ticks in d3">
+          <li><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span><b>No obligation.</b> No hard sell, and no chasing afterwards.</span></li>
+          <li><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span><b>A written plan.</b> The first three jobs to hand over, and the time each saves.</span></li>
+          <li><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span><b>A fixed quote.</b> Agreed in writing before any work starts.</span></li>
+        </ul>
+      </div>
+      <div class="card cal in d2" id="cal" data-at="pick"><div class="card-in">
+        <div data-step="pick">
+          <div class="cal-top"><span><b>Choose a time</b><small>30 minutes · by phone or video · UK time</small></span>
+            <span class="cal-nav"><button type="button" id="cal-prev" aria-label="Earlier week"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button><span id="cal-wk">This week</span><button type="button" id="cal-next" aria-label="Later week"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button></span></div>
+          <div class="cal-grid" id="cal-grid" aria-label="Free times this week"></div>
+          <div class="cal-days" id="cal-days" role="tablist" aria-label="Days"></div>
+          <div class="cal-list" id="cal-list" aria-label="Free times"></div>
+          <div class="cal-foot"><span class="lg"><i aria-hidden="true"></i>Free time</span><span>Example times for this mockup</span></div>
+        </div>
+        <form class="cal-form" data-step="form" id="cal-form" data-live novalidate>
+          <div class="cal-when"><span><b id="cal-pick">Tuesday 4 November, 2:30pm</b><small>30-minute call · UK time</small></span><button type="button" id="cal-change">Change</button></div>
+          <div class="cal-f2">
+            <label for="cf-n">Your name<input id="cf-n" autocomplete="name" required></label>
+            <label for="cf-b">Business name<input id="cf-b" autocomplete="organization" required></label>
+            <label for="cf-e">Email<input id="cf-e" type="email" autocomplete="email" required></label>
+            <label for="cf-p">Phone<input id="cf-p" type="tel" autocomplete="tel" required></label>
+          </div>
+          <div class="cal-help"><span id="cf-hl">What would you like help with?</span><div class="crow" id="cf-jobs"></div></div>
+          <button class="btn-create" type="submit">Book my free call <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6.5l5.5 5.5-5.5 5.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          <p class="cal-fine">You get a calendar invite now and a reminder the day before.</p>
+        </form>
+        <div class="cal-done" data-step="done" role="status">
+          <i aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></i>
+          <b>You are booked in.</b>
+          <p id="cal-done-t">We will call you on Tuesday 4 November at 2:30pm. The invite is in your inbox.</p>
+        </div>
+      </div></div>
+    </div>
+  </section>
+
+  <!-- 2 · what happens on the call, and what you get -->
+  <section class="snap sec s-call" id="what">
+    <div class="heat" aria-hidden="true"><i class="h1"></i></div>
+    <div class="wrap mk-split">
+      <div>
+        <span class="sec-k"><i aria-hidden="true"></i>What you get</span>
+        <h2 class="sec-h">Half an hour, then <em>a plan to keep.</em></h2>
+        <p class="sec-sub">Here is the kind of plan you get after your call. It is yours whether or not you go ahead.</p>
+        <ol class="call-steps">
+          <li><span class="n">1</span><span><b>We listen</b><span>How your week runs, what takes the longest and what you would rather not do.</span></span></li>
+          <li><span class="n">2</span><span><b>We plan</b><span>Within two working days: the first three jobs to hand over, the time each saves, and a fixed quote.</span></span></li>
+          <li><span class="n">3</span><span><b>You decide</b><span>Go ahead, wait, or use the plan yourself. No chasing, ever.</span></span></li>
+        </ol>
+      </div>
+      <div class="plan wcard" aria-label="Example plan from a free consultation">
+          <div class="pl-top"><span class="rp-k"><i aria-hidden="true"></i>Your AI plan</span><span class="rp-ex">Example</span></div>
+          <div class="pl-biz"><span class="bm" aria-hidden="true">HD</span><div><b>Harbourside Dental</b><span>Dental practice · Brighton</span></div></div>
+          <div class="pl-big"><b>9<small>h</small></b><span>a week this practice could save (estimate)</span></div>
+          <p class="pl-k">Start with these three</p>
+          <ol class="pl-l">
+            <li><span class="n">1</span><span><b>Reminders and rebooking</b><small>Keep customers</small></span><span class="h">3.5h a week</span></li>
+            <li><span class="n">2</span><span><b>Instant replies to enquiries</b><small>Win work</small></span><span class="h">2.5h a week</span></li>
+            <li><span class="n">3</span><span><b>Review requests after visits</b><small>Get found</small></span><span class="h">1h a week</span></li>
+          </ol>
+          <div class="pl-q"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span>A fixed quote, agreed before any work starts</span></div>
+        </div>
+    </div>
+  </section>
+
+  <!-- 3 · questions and footer -->
+  <section class="snap sec s-why sp-q" id="questions">
+    <div class="heat" aria-hidden="true"><i class="h1"></i></div>
+    <div class="why"><div class="wrap why-grid">
+      <div class="q-head">
+        <span class="sec-k"><i aria-hidden="true"></i>Questions</span>
+        <h2 class="sec-h">Before you <em>book.</em></h2>
+        <p class="sec-sub">Anything else, ask on the call.</p>
+      </div>
+      <div class="cta-row q-cta"><a class="btn-create" href="#top">Choose a time <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6.5l5.5 5.5-5.5 5.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></a><span class="note">Free · 30 minutes</span></div>
+      <div class="faq"><details><summary>Is it really free?<span class="fq-ic" aria-hidden="true"></span></summary><div class="fq-a"><p>Yes. The call and the written plan are free, and you are under no obligation to go ahead.</p></div></details><details><summary>Who will I speak to?<span class="fq-ic" aria-hidden="true"></span></summary><div class="fq-a"><p>One of our team, the person who would plan your build. Not a call centre.</p></div></details><details><summary>Do I need to prepare anything?<span class="fq-ic" aria-hidden="true"></span></summary><div class="fq-a"><p>No. A rough idea of the jobs that take up your week helps, and you can tick them on our services page first.</p></div></details><details><summary>Can I move or cancel the call?<span class="fq-ic" aria-hidden="true"></span></summary><div class="fq-a"><p>Yes. Use the link in your confirmation email, any time before the call.</p></div></details></div>
+    </div></div>
+    <footer class="foot"><div class="wrap"><div class="foot-in"><div class="foot-brand"><img src="/img/cayenne.png" alt="Cayenne"><p>Plain-English AI for UK businesses. Learn it, plan it or have it built.</p></div>
+    <div><h4>Cayenne</h4><ul><li><a href="/course">The free course</a></li><li><a href="/mockup-consultation">Free consultation</a></li><li><a href="/mockup-services">Services</a></li><li><a href="/guides">Guides</a></li><li><a href="/insights">Insights</a></li></ul></div>
+    <div><h4>Company</h4><ul><li><a href="/about">About</a></li><li><a href="/partners">Partners</a></li><li><a href="/contact">Contact</a></li><li><a href="/signin">Sign in</a></li></ul></div></div>
+    <div class="foot-base"><span>© 2026 Cayenne. Made in the UK.</span><nav aria-label="Legal"><a href="/legal#privacy">Privacy</a><a href="/legal#cookies">Cookies</a><a href="/legal#terms">Terms</a></nav></div></div></footer>
+  </section>
+</div></div>
+<div class="mk-flag" aria-hidden="true"><i></i>Mockup</div>
+<div class="toast" id="toast" role="status" hidden></div>
+<script src="/site.js"></script>
+<script>
+(function () {
+  'use strict';
+  var $ = function (s, el) { return (el || document).querySelector(s); };
+  var $$ = function (s, el) { return Array.prototype.slice.call((el || document).querySelectorAll(s)); };
+  var cal = $('#cal'), grid = $('#cal-grid'), days = $('#cal-days'), list = $('#cal-list');
+  var TICK = "<svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M5 12.5l4.5 4.5L19 7.5\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg>", PLUS = "<svg class=\"i-pl\" width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M12 5v14M5 12h14\" stroke=\"currentColor\" stroke-width=\"2.6\" stroke-linecap=\"round\"/></svg>", TK = "<svg class=\"i-tk\" width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M5 12.5l4.5 4.5L19 7.5\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"3\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg>";
+  /* MOCKUP ONLY: example free times, staggered through each day. The real build reads them from your own calendar. */
+  var PATTERN = [
+    [[9, 30], [13, 15], [16, 45]], [[10, 0], [14, 30]], [[8, 45], [11, 30], [15, 15]], [[12, 0], [16, 30]], [[9, 15], [11, 45]],
+    [[10, 30], [15, 45]], [[9, 0], [12, 15], [16, 0]], [[11, 0], [14, 45]], [[9, 45], [13, 30], [16, 15]], [[10, 15]]
+  ];
+  var START = 8.5 * 60, SPAN = 9 * 60; /* 8:30am to 5:30pm */
+  function fmt(h, m) { var ap = h >= 12 ? 'pm' : 'am', hh = h % 12 || 12; return hh + (m ? ':' + (m < 10 ? '0' : '') + m : '') + ap; }
+  var DN = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'], MN = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  /* the next ten working days from tomorrow */
+  var all = [], d = new Date(); d.setHours(12, 0, 0, 0);
+  while (all.length < 10) { d.setDate(d.getDate() + 1); if (d.getDay() > 0 && d.getDay() < 6) all.push(new Date(d)); }
+  var wk = 0, day = 0, picked = null;
+  function slotsFor(i) { return PATTERN[i].map(function (t) { return { h: t[0], m: t[1], day: all[i] }; }); }
+  function label(s) { return DN[s.day.getDay()] + ' ' + s.day.getDate() + ' ' + MN[s.day.getMonth()] + ', ' + fmt(s.h, s.m); }
+  function slotBtn(s, abs) {
+    var b = document.createElement('button'); b.type = 'button'; b.className = 'slot'; b.textContent = fmt(s.h, s.m);
+    b.setAttribute('aria-label', label(s)); b.setAttribute('aria-pressed', 'false');
+    if (abs) b.style.top = 'calc(' + (((s.h * 60 + s.m) - START) / SPAN * 100) + '% - 17px)';
+    b.addEventListener('click', function () { choose(s); }); return b;
+  }
+  function render() {
+    var idx = [0, 1, 2, 3, 4].map(function (n) { return wk * 5 + n; });
+    $('#cal-wk').textContent = wk ? 'Next week' : 'This week';
+    $('#cal-prev').disabled = wk === 0; $('#cal-next').disabled = wk === 1;
+    grid.innerHTML = '<div></div>' + idx.map(function (i) { var x = all[i]; return '<div class="cal-dh"><b>' + DN[x.getDay()].slice(0, 3) + '</b><span>' + x.getDate() + '</span><small>' + PATTERN[i].length + ' free</small></div>'; }).join('');
+    var times = document.createElement('div'); times.className = 'cal-times';
+    [9, 11, 13, 15, 17].forEach(function (h) { var t = document.createElement('span'); t.textContent = fmt(h, 0); t.style.top = (((h * 60) - START) / SPAN * 100) + '%'; times.appendChild(t); });
+    grid.appendChild(times);
+    idx.forEach(function (i) { var col = document.createElement('div'); col.className = 'cal-col'; slotsFor(i).forEach(function (s) { col.appendChild(slotBtn(s, true)); }); grid.appendChild(col); });
+    days.innerHTML = '';
+    idx.forEach(function (i, n) { var x = all[i], b = document.createElement('button'); b.type = 'button'; b.setAttribute('role', 'tab'); b.setAttribute('aria-selected', String(n === day));
+      b.innerHTML = DN[x.getDay()].slice(0, 3) + '<b>' + x.getDate() + '</b><small>' + PATTERN[i].length + ' free</small>';
+      b.addEventListener('click', function () { day = n; render(); }); days.appendChild(b); });
+    list.innerHTML = ''; slotsFor(idx[day]).forEach(function (s) { list.appendChild(slotBtn(s, false)); });
+  }
+  $('#cal-prev').addEventListener('click', function () { wk = 0; day = 0; render(); });
+  $('#cal-next').addEventListener('click', function () { wk = 1; day = 0; render(); });
+  /* step 2: the jobs ticked on the services page come along, or pick an area here */
+  var jobs = []; try { jobs = JSON.parse(sessionStorage.getItem('cy_jobs') || '[]'); } catch (e) {}
+  var opts = jobs.length ? jobs : ['Get found', 'Win work', 'Keep customers', 'Run the business'];
+  $('#cf-hl').textContent = jobs.length ? 'The jobs you ticked' : 'What would you like help with?';
+  $('#cf-jobs').innerHTML = opts.map(function (t) { return '<button type="button" class="ch" role="checkbox" aria-checked="' + (jobs.length ? 'true' : 'false') + '"><span class="ch-ic" aria-hidden="true">' + PLUS + TK + '</span><span class="ch-t">' + t.replace(/</g, '&lt;') + '</span></button>'; }).join('');
+  $$('#cf-jobs .ch').forEach(function (c) { c.addEventListener('click', function () { c.setAttribute('aria-checked', String(c.getAttribute('aria-checked') !== 'true')); }); });
+  function choose(s) { picked = s; $('#cal-pick').textContent = label(s); cal.setAttribute('data-at', 'form'); setTimeout(function () { $('#cf-n').focus(); }, 50); }
+  $('#cal-change').addEventListener('click', function () { cal.setAttribute('data-at', 'pick'); });
+  $('#cal-form').addEventListener('submit', function (e) {
+    e.preventDefault(); var f = e.target, bad = $$('input', f).filter(function (i) { return !i.checkValidity(); });
+    if (bad.length) { bad[0].focus(); if (window.cayenneToast) cayenneToast('Please fill in ' + bad[0].parentNode.firstChild.textContent.trim().toLowerCase()); return; }
+    $('#cal-done-t').textContent = 'We will call you on ' + label(picked).replace(',', ' at') + '. The invite is in your inbox.';
+    cal.setAttribute('data-at', 'done'); if (window.cayenneToast) cayenneToast('Mockup: nothing was booked');
+  });
+  render();
+})();
+</script>
