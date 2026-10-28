@@ -468,7 +468,7 @@
     var h0 = inner.offsetHeight;
     if (renderCreator.an) renderCreator.an.cancel();
     card.classList.toggle('is-loading', S.phase === 'loading');
-    if (top) top.classList.toggle('working', !!S.biz && !S.created);
+    if (top) { top.classList.toggle('working', !!S.biz && !S.created); top.classList.toggle('coursing', !!S.biz || !!S.created || S.phase === 'loading'); }
     S.narrow = cardNarrow();
     inner.innerHTML = creatorHTML();
     balanceRows();
@@ -558,18 +558,48 @@
   /* ---------- the rest of the home page ---------- */
   function navHTML() {
     return '<header class="nav"><div class="nav-in wrap"><a class="brand" href="#top" data-act="top" aria-label="Cayenne home"><img src="' + IMG.logo + '" alt="Cayenne" width="128" height="36"></a>' +
-      '<nav class="links" aria-label="Main"><a href="/course">Course</a><a href="/audit">Free AI audit</a><a href="/services">Services</a><a href="/about">About</a></nav>' +
+      '<nav class="links" aria-label="Main"><a href="/services">What we do</a><a href="/course">Free course</a><a href="/audit">Free AI audit</a><a href="/about">About</a></nav>' +
       '<a class="signin" href="/signin">Sign in</a><button type="button" class="menu" aria-label="Menu" aria-expanded="false" data-act="menu">' + IC.menu + '</button>' +
-      '<div class="mnav" id="mnav" hidden><a href="/course">Course<span aria-hidden="true">→</span></a><a href="/audit">Free AI audit<span aria-hidden="true">→</span></a><a href="/services">Services<span aria-hidden="true">→</span></a><a href="/about">About<span aria-hidden="true">→</span></a><a href="/signin">Sign in<span aria-hidden="true">→</span></a></div></div></header>';
+      '<div class="mnav" id="mnav" hidden><a href="/services">What we do<span aria-hidden="true">→</span></a><a href="/course">Free course<span aria-hidden="true">→</span></a><a href="/audit">Free AI audit<span aria-hidden="true">→</span></a><a href="/about">About<span aria-hidden="true">→</span></a><a href="/signin">Sign in<span aria-hidden="true">→</span></a></div></div></header>';
   }
+  /* the first screen: two ways in, learn it yourself or have it done, with the work running in the background */
+  var FLOW = '<svg class="flow" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><path id="f1" class="ln" d="M90 300 C 240 300, 260 180, 420 170"/><path id="f2" class="ln" d="M90 300 C 200 420, 160 600, 300 690"/><path id="f3" class="ln" d="M300 690 C 420 770, 560 820, 720 830"/><path id="f4" class="ln" d="M1350 260 C 1220 250, 1190 140, 1040 150"/><path id="f5" class="ln" d="M1350 260 C 1250 420, 1300 580, 1160 680"/><path id="f6" class="ln" d="M1160 680 C 1040 770, 900 820, 720 830"/><circle class="nd" cx="90" cy="300" r="26"/><path class="ic" d="M78 292h24v16H78zM78 292l12 9 12-9"/><circle class="nd" cx="420" cy="170" r="22"/><path class="ic" d="M410 162h20v13h-12l-6 5v-5h-2z"/><circle class="nd" cx="300" cy="690" r="24"/><path class="ic" d="M289 681h22v20h-22zM289 688h22M295 677v6M305 677v6"/><circle class="nd" cx="720" cy="830" r="26"/><path class="ic" d="M711 820h18v22l-4-3-5 3-5-3-4 3zM715 827h10M715 832h10"/><circle class="nd" cx="1350" cy="260" r="26"/><path class="ic" d="M1350 247l3.6 7.4 8 1.2-5.8 5.6 1.4 8-7.2-3.8-7.2 3.8 1.4-8-5.8-5.6 8-1.2z"/><circle class="nd" cx="1040" cy="150" r="22"/><path class="ic" d="M1031 150a9 9 0 1 0 18 0 9 9 0 1 0-18 0M1040 145v5l3 3"/><circle class="nd" cx="1160" cy="680" r="24"/><path class="ic" d="M1150 682l6 6 12-13"/><circle class="pl" r="4"><animateMotion dur="5s" repeatCount="indefinite" begin="0s"><mpath href="#f1"/></animateMotion></circle><circle class="pl" r="4"><animateMotion dur="6s" repeatCount="indefinite" begin="1s"><mpath href="#f2"/></animateMotion></circle><circle class="pl g" r="4"><animateMotion dur="5.5s" repeatCount="indefinite" begin="2s"><mpath href="#f3"/></animateMotion></circle><circle class="pl" r="4"><animateMotion dur="5s" repeatCount="indefinite" begin="0.5s"><mpath href="#f4"/></animateMotion></circle><circle class="pl" r="4"><animateMotion dur="6.5s" repeatCount="indefinite" begin="1.5s"><mpath href="#f5"/></animateMotion></circle><circle class="pl g" r="4"><animateMotion dur="5.5s" repeatCount="indefinite" begin="3s"><mpath href="#f6"/></animateMotion></circle></svg>';
   function heroHTML() {
-    return '<section class="snap hero" id="top"><div class="heat" aria-hidden="true"><i class="h1"></i><i class="h2"></i><i class="h3"></i></div>' + navHTML() +
+    return '<section class="snap hero h2p" id="top"><div class="heat" aria-hidden="true"><i class="h1"></i><i class="h2"></i><i class="h3"></i></div>' + FLOW + navHTML() +
       '<div class="hero-main wrap">' +
       pillHTML() +
-      '<h1 class="hero-h in d1">A free AI course, built around <span class="slot" id="slot">' + (S.biz ? esc(S.biz.name) + '.' : 'your business.') + '</span></h1>' +
-      '<div class="lede-w"><div><p class="lede in d2">Pick your business and your goals. Get your first lesson in under a minute.</p></div></div>' +
-      '<div class="card in d3" id="card"><div class="card-in" id="creator"></div></div>' +
-      '<div class="alt-w"><div><p class="alt in d4">Prefer us to set it up for you? <a href="/audit">Get a free AI audit</a></p></div></div></div></section>';
+      '<h1 class="hero-h in d1"><span class="h-a">Put AI to work in <span class="slot">your business.</span></span><span class="h-b">A free AI course, built around <span class="slot" id="slot">' + (S.biz ? esc(S.biz.name) + '.' : 'your business.') + '</span></span></h1>' +
+      '<div class="lede-w"><div><p class="lede in d2"><span class="h-a">Learn to use it yourself with a free course, or let us build it to do the busywork for you.</span><span class="h-b">Pick your business and your goals. Get your first lesson in under a minute.</span></p></div></div>' +
+      '<div class="paths in d3">' +
+        '<div class="p-col p-learn"><span class="p-tg">Learn it yourself<span class="p-x"> · Free course</span></span><div class="card" id="card"><div class="card-in" id="creator"></div></div></div>' +
+        '<div class="p-col p-do"><span class="p-tg d">Have it done for you</span><div class="pdo"><b class="pdo-t">We build AI that runs the busywork</b>' +
+          '<div class="pdo-c"><span><i></i>Enquiries answered</span><span><i></i>Bookings and reminders</span><span><i></i>Invoices chased</span><span><i></i>Reviews asked for</span></div>' +
+          '<a class="btn-create" href="/audit">Book a free AI audit ' + IC.arrow + '</a><span class="pdo-n">Free · 30-minute call</span></div></div>' +
+      '</div></div></section>';
+  }
+  /* the second screen: what we automate, each area playing a short example of its job */
+  function automateHTML() {
+    var A = [
+      ['globe', 'Get found', 'More of the right people find you on Google.', 'Google profile',
+        '<div class="rowc aq s1"><span class="stars">★★★★★</span><span><b>New review</b><small>“Brilliant, on time”</small></span></div><span class="ap ai aq s2"><i></i>Thank-you reply written</span><div class="rowc aq s3"><span><b>Weekly post published</b><small>Photos from this week’s jobs</small></span></div><span class="ap ok aq s4">✓ Profile up to date</span>'],
+      ['bolt', 'Win work', 'Every enquiry answered in minutes, quotes followed up.', 'New enquiry',
+        '<div class="bub in aq s1">Hi, could you quote for a new bathroom?</div><span class="ap ai aq s2"><i></i>Reply drafted in your words</span><div class="bub out aq s3">Yes, happy to. I can pop round Thursday at 10. Shall I book it?</div><span class="ap ok aq s4">✓ Visit booked · Thu 10am</span>', '/win-work'],
+      ['train', 'Keep customers', 'Fewer no-shows, more repeat bookings.', 'Tomorrow',
+        '<div class="rowc aq s1"><span><b>10:00 · Sarah Jones</b><small>Annual service</small></span></div><span class="ap ai aq s2"><i></i>Reminder sent by text</span><div class="bub in aq s3">Thanks, see you then!</div><span class="ap ok aq s4">✓ Confirmed · rebooked for next year</span>'],
+      ['tool', 'Run the business', 'Less admin, and paid faster.', 'Invoices',
+        '<div class="rowc aq s1"><span><b>Invoice 1042</b><small>Harper Kitchens</small></span><span class="late">14 days late</span></div><span class="ap ai aq s2"><i></i>Polite reminder sent</span><div class="rowc aq s3"><span><b>Invoice 1042</b><small>Paid by bank transfer</small></span><span class="paid">PAID</span></div><span class="ap ok aq s4">✓ Added to your accounts</span>']
+    ];
+    return '<section class="snap sec s-auto" id="automate"><div class="heat" aria-hidden="true"><i class="h1"></i></div><div class="wrap center">' +
+      '<span class="sec-k"><i aria-hidden="true"></i>What we automate</span>' +
+      '<h2 class="sec-h">The busywork, <em>handled for you.</em></h2>' +
+      '<p class="sec-sub">We build one AI system for your business. Here is the kind of work it does, every day, while you get on with the job.</p>' +
+      '<div class="areas" id="areas">' + A.map(function (a) {
+        return '<div class="ar"><div class="ar-h"><span class="ar-ic">' + IC[a[0]] + '</span><b>' + a[1] + '</b><p>' + a[2] + '</p></div>' +
+          '<div class="vgw" aria-hidden="true"><div class="bar">' + a[3] + '<span class="ex">Example</span></div>' + a[4] + '</div>' +
+          (a[5] ? '<a class="ar-go" href="' + a[5] + '">See how it works ' + IC.arrow + '</a>' : '') + '</div>';
+      }).join('') + '</div>' +
+      '<div class="ar-dots" aria-hidden="true"><i class="on"></i><i></i><i></i><i></i></div>' +
+      '<div class="cta-row ar-cta"><a class="btn-create" href="/audit">Book a free AI audit ' + IC.arrow + '</a><a class="btn-primary" href="#top" data-act="start">Learn it yourself, free</a></div></div></section>';
   }
   function courseHTML() {
     var stages = [
@@ -683,7 +713,7 @@
     observers.forEach(function (o) { o.disconnect(); }); observers = [];
     stopRotator();
     if (S.phase === 'module') { app.innerHTML = moduleHTML(); setSticky(false); return; }
-    app.innerHTML = heroHTML() + courseHTML() + auditHTML() + servicesHTML() + faqHTML() + whyHTML();
+    app.innerHTML = heroHTML() + automateHTML() + courseHTML() + auditHTML() + faqHTML() + whyHTML();
     var fq = $('#faq details[data-first]'); if (fq && !cardNarrow() && window.innerHeight >= 820) fq.open = true;
     if (S.intro) { app.classList.add('intro'); S.intro = false; clearTimeout(renderShell.t); renderShell.t = setTimeout(function () { app.classList.remove('intro'); }, 1500); }
     renderCreator(); fitHeadline();
@@ -698,6 +728,11 @@
     setSticky(cur === 'audit' || cur === 'services' || cur === 'faq');
   }
   window.addEventListener('scroll', function () { if (!stickyCheck.f) { stickyCheck.f = true; requestAnimationFrame(function () { stickyCheck.f = false; stickyCheck(); }); } }, { passive: true });
+  document.addEventListener('scroll', function (e) {
+    var a = e.target; if (!a || a.id !== 'areas') return;
+    var n = Math.round(a.scrollLeft / Math.max(1, a.scrollWidth - a.clientWidth) * 3);
+    $$('.ar-dots i').forEach(function (d, i) { d.classList.toggle('on', i === n); });
+  }, true);
   function setSticky(on) { sticky.classList.toggle('show', on); if (on) sticky.removeAttribute('inert'); else sticky.setAttribute('inert', ''); }
   function watch() {
     if (!('IntersectionObserver' in window)) return;

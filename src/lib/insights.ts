@@ -176,7 +176,7 @@ const ICON = {
   tick: '<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
 };
 const NAV = `<header class="nav"><div class="nav-in wrap"><a class="brand" href="/" aria-label="Cayenne home"><img src="/img/cayenne.png" alt="Cayenne" width="128" height="36"></a>
-<nav class="links" aria-label="Main"><a href="/course">Course</a><a href="/audit">Free AI audit</a><a href="/services">Services</a><a href="/about">About</a></nav>
+<nav class="links" aria-label="Main"><a href="/services">What we do</a><a href="/course">Free course</a><a href="/audit">Free AI audit</a><a href="/about">About</a></nav>
 <a class="signin" href="/signin">Sign in</a><button type="button" class="menu" aria-label="Menu">${ICON.menu}</button></div></header>`;
 const FOOT = `<footer class="foot"><div class="wrap"><div class="foot-in"><div class="foot-brand"><img src="/img/cayenne.png" alt="Cayenne"><p>Plain-English AI for UK businesses. Learn it, plan it or have it built.</p></div>
 <div><h4>Cayenne</h4><ul><li><a href="/course">The free course</a></li><li><a href="/audit">Free AI audit</a></li><li><a href="/services">Services</a></li><li><a href="/guides">Guides</a></li><li><a href="/insights">Insights</a></li></ul></div>
