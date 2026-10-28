@@ -1,0 +1,33 @@
+---
+/* One layout for every page: the head (title, description, sharing tags, fonts, styles) and the shared motion layer.
+   Each page's designed body and its own styles come in as HTML from src/html. */
+interface Props { title: string; description: string; page: string; head: string; body: string }
+const { title, description, page, head, body } = Astro.props;
+---
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>{title}</title>
+<meta name="description" content={description}>
+<meta name="theme-color" content="#FFFFFF">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Cayenne">
+<meta property="og:title" content={title}>
+<meta property="og:description" content={description}>
+<meta property="og:image" content="/img/cayenne.png">
+<meta name="twitter:card" content="summary">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400..700&family=Instrument+Serif:ital@0;1&display=swap">
+<link rel="stylesheet" href="/site.css">
+<Fragment set:html={head} />
+<link rel="stylesheet" href="/motion.css">
+</head>
+<body data-page={page}>
+<Fragment set:html={body} />
+<script is:inline src="/motion.js" defer></script>
+</body>
+</html>

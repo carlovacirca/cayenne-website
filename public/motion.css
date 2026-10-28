@@ -1,0 +1,55 @@
+/* Motion layer for the whole site. Subtle by design:
+   - the main red buttons carry a soft light sweep every few seconds, and on hover
+   - every scroll stop arrives with its own entrance (rise, slide, scale, blur, tilt, wipe), staggered a little
+   - one visual per screen floats very slowly, a few pixels, to draw the eye
+   - pages change with a short fade and lift
+   Nothing here hides content unless motion.js has switched it on (html.mo), and it all stops for reduced motion. */
+
+:root{--topbar:0px}
+body{padding-top:0}
+
+/* ---------- page changes ---------- */
+@view-transition{navigation:auto}
+::view-transition-old(root){animation:vt-out .28s cubic-bezier(.4,0,1,1) both}
+::view-transition-new(root){animation:vt-in .5s cubic-bezier(.2,.75,.25,1) both}
+@keyframes vt-out{to{opacity:0;transform:translateY(-6px)}}
+@keyframes vt-in{from{opacity:0;transform:translateY(10px)}}
+
+/* ---------- shimmer on the main buttons ---------- */
+.btn-create{position:relative;overflow:hidden;isolation:isolate}
+.btn-create::after{content:"";position:absolute;top:-10%;bottom:-10%;left:-70%;width:42%;z-index:1;pointer-events:none;background:linear-gradient(100deg,rgba(255,255,255,0) 0%,rgba(255,255,255,.34) 48%,rgba(255,255,255,0) 100%);transform:skewX(-18deg);animation:shimmer 7s cubic-bezier(.45,0,.2,1) 2.4s infinite}
+.btn-create:hover::after{animation:shimmer-now .85s cubic-bezier(.45,0,.2,1) 1}
+.btn-create[aria-disabled="true"]::after{display:none}
+@keyframes shimmer{0%{left:-70%}13%{left:135%}100%{left:135%}}
+@keyframes shimmer-now{from{left:-70%}to{left:135%}}
+
+/* ---------- scroll stop entrances (motion.js tags the items with .m-i and the stop with data-enter) ---------- */
+.mo .snap[data-enter] .m-i{opacity:0;will-change:opacity,transform;transition:opacity .75s cubic-bezier(.2,.75,.25,1),transform .9s cubic-bezier(.2,.75,.25,1),filter .75s cubic-bezier(.2,.75,.25,1),clip-path .9s cubic-bezier(.2,.75,.25,1);transition-delay:calc(var(--i,0) * 75ms)}
+.mo .snap[data-enter="rise"] .m-i{transform:translateY(28px)}
+.mo .snap[data-enter="slide"] .m-i{transform:translateX(-30px)}
+.mo .snap[data-enter="slide"] .m-i.m-r{transform:translateX(30px)}
+.mo .snap[data-enter="scale"] .m-i{transform:scale(.955)}
+.mo .snap[data-enter="blur"] .m-i{filter:blur(9px);transform:translateY(8px)}
+.mo .snap[data-enter="tilt"] .m-i{transform:perspective(1000px) rotateX(9deg) translateY(22px);transform-origin:50% 100%}
+.mo .snap[data-enter="wipe"] .m-i{clip-path:inset(0 0 100% 0 round 24px);transform:translateY(12px)}
+.mo .snap.on .m-i{opacity:1;transform:none;filter:none;clip-path:inset(0 0 0 0 round 0)}
+.mo .snap[data-enter] > .heat{opacity:0;transform:scale(.94);transition:opacity 1.4s ease,transform 1.8s cubic-bezier(.2,.75,.25,1)}
+.mo .snap.on > .heat{opacity:1;transform:none}
+
+/* reading and app pages: their blocks rise in once as they come into view */
+.mo .m-b{opacity:0;transform:translateY(18px);transition:opacity .7s cubic-bezier(.2,.75,.25,1),transform .8s cubic-bezier(.2,.75,.25,1)}
+.mo .m-b.on{opacity:1;transform:none}
+
+/* ---------- a slow float on one visual per screen ---------- */
+@keyframes floaty{0%,100%{translate:0 0}50%{translate:0 -6px}}
+@keyframes floaty-s{0%,100%{translate:0 0;rotate:0deg}50%{translate:0 -4px;rotate:-.6deg}}
+.mo .floaty{animation:floaty 7.5s ease-in-out infinite}
+.mo .floaty.f-alt{animation:floaty-s 9s ease-in-out infinite}
+.mo .floaty.f-hold,.mo .floaty:hover,.mo .floaty:focus-within,.mo.typing .floaty{animation-play-state:paused}
+
+@media (prefers-reduced-motion: reduce){
+  @view-transition{navigation:none}
+  .btn-create::after{display:none}
+  .mo .m-i,.mo .m-b{opacity:1!important;transform:none!important;filter:none!important;clip-path:none!important}
+  .mo .floaty{animation:none!important}
+}

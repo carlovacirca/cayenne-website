@@ -1,0 +1,922 @@
+
+
+<div id="stage"><div id="app" class="app"></div></div>
+<div class="sticky" id="sticky" inert>
+  <span class="tx"><span class="trio" aria-hidden="true"><span><img src="img/openai.png" alt=""></span><span><img src="img/claude.png" alt=""></span><span><img src="img/gemini.png" alt=""></span></span>Your free AI course, built around your business</span>
+  <a class="btn-create" href="#top" data-act="start">Start the free course</a>
+</div>
+<div class="toast" id="toast" role="status" hidden></div>
+
+
+<script>
+(function () {
+  'use strict';
+  var $ = function (s, el) { return (el || document).querySelector(s); };
+  var $$ = function (s, el) { return Array.prototype.slice.call((el || document).querySelectorAll(s)); };
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  var IMG = { openai: 'img/openai.png', claude: 'img/claude.png', gemini: 'img/gemini.png', perplexity: 'img/perplexity.png', copilot: 'img/copilot.png', logo: 'img/cayenne.png' };
+  /* the AI tools the hero pill swipes through, in this order. To add one, add a line here and its logo to img/ */
+  var AIS = [
+    { name: 'ChatGPT', logo: IMG.openai },
+    { name: 'Claude', logo: IMG.claude },
+    { name: 'Gemini', logo: IMG.gemini },
+    { name: 'Perplexity', logo: IMG.perplexity },
+    { name: 'Copilot', logo: IMG.copilot }
+  ];
+  var ROT_EVERY = 1900;
+  var RM = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+
+  /* ---------- icons ---------- */
+  var IC = {
+    search: '<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M16 16l4.5 4.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
+    pin: '<svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-6.5-6.1-6.5-11.2A6.5 6.5 0 0 1 12 3.3a6.5 6.5 0 0 1 6.5 6.5C18.5 14.9 12 21 12 21z" fill="#C40F0B"/><circle cx="12" cy="9.8" r="2.4" fill="#FFFFFF"/></svg>',
+    chev: '<svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    tick: '<svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="#FFFFFF" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    x: '<svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>',
+    spark: '<svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.4 6.6 6.6 2.4-6.6 2.4L12 20.5l-2.4-6.6L3 11.5l6.6-2.4z" fill="currentColor"/></svg>',
+    lock: '<svg class="lk" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5" fill="none" stroke="currentColor" stroke-width="2"/></svg>',
+    menu: '<svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h16M4 16h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
+    arrow: '<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    back: '<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    plus: '<svg class="i-pl" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg>',
+    tk: '<svg class="i-tk" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    copy: '<svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M16 8V6.5A2.5 2.5 0 0 0 13.5 4h-7A2.5 2.5 0 0 0 4 6.5v7A2.5 2.5 0 0 0 6.5 16H8" fill="none" stroke="currentColor" stroke-width="2"/></svg>',
+    check: '<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    checkSm: '<svg width="13" height="13" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    g: '<svg width="20" height="20" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>',
+    map: '<svg width="64" height="64" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" fill="#E8EEF0"/><path d="M-4 44 C 14 38, 22 50, 40 40 S 60 30, 70 34" fill="none" stroke="#FFFFFF" stroke-width="6"/><path d="M20 -4 L 26 70" stroke="#FFFFFF" stroke-width="5"/><path d="M44 -4 L 40 70" stroke="#FFFFFF" stroke-width="3"/><rect x="48" y="6" width="14" height="14" rx="3" fill="#CFE6C9"/><rect x="2" y="50" width="14" height="10" rx="3" fill="#CFE6C9"/><path d="M32 37s-7-6.6-7-12.1A7 7 0 0 1 32 17.9a7 7 0 0 1 7 7C39 30.4 32 37 32 37z" fill="#C40F0B"/><circle cx="32" cy="25" r="2.6" fill="#FFFFFF"/></svg>',
+    train: '<svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 9L12 4.5 21.5 9 12 13.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M6.5 11v4.6c0 1.3 2.5 2.9 5.5 2.9s5.5-1.6 5.5-2.9V11M21.5 9v5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
+    bolt: '<svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 2.5L5 13.5h6l-1 8 8.5-11h-6z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>',
+    tool: '<svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3 9h18M7.5 13.5l2 2-2 2M12 17.5h4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    globe: '<svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="7" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3.5 10.5h14M10.5 3.5c2 2.1 3 4.4 3 7s-1 4.9-3 7c-2-2.1-3-4.4-3-7s1-4.9 3-7zM15.8 15.8L21 21" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
+    bulb: '<svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2V16h5v-.1c0-.8.4-1.5 1-2A6 6 0 0 0 12 3z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+  };
+  function stars(r) { var full = Math.round(r), s = ''; for (var i = 0; i < 5; i++) s += i < full ? '★' : '☆'; return s; }
+  function logoSpan(k) { return '<span><img src="' + IMG[k] + '" alt=""></span>'; }
+
+  /* ---------- sample Google Business Profiles (fictional) ---------- */
+  var BIZ = [
+    ['Harper & Sons Kitchens', 'Kitchen fitter', 'kitchen fitters', 'trade', 'Leeds', 'LS6', 4.8, 63],
+    ['Hartley & Co Accountants', 'Accountant', 'accountants', 'pro', 'Manchester', 'M20', 4.9, 41],
+    ['Harbourside Dental', 'Dental practice', 'dental practices', 'health', 'Brighton', 'BN1', 4.7, 212],
+    ['The Hart & Hound', 'Pub', 'pubs', 'hosp', 'York', 'YO1', 4.5, 388],
+    ['Hartwell Physio', 'Physiotherapist', 'physiotherapists', 'health', 'Bristol', 'BS6', 5.0, 97],
+    ['Hollybank Plumbing & Heating', 'Plumber', 'plumbers', 'trade', 'Harrogate', 'HG1', 4.9, 154],
+    ['Honey & Oak Bakery', 'Bakery', 'bakeries', 'hosp', 'Bath', 'BA1', 4.8, 276],
+    ['Brightwire Electrical', 'Electrician', 'electricians', 'trade', 'Leicester', 'LE2', 4.9, 88],
+    ['Bluebell Florist', 'Florist', 'florists', 'retail', 'Norwich', 'NR2', 4.8, 130],
+    ['Blackthorn Lettings', 'Letting agent', 'letting agents', 'pro', 'Nottingham', 'NG7', 4.4, 59],
+    ['Copper Kettle Café', 'Café', 'cafés', 'hosp', 'Chester', 'CH1', 4.6, 512],
+    ['Cobalt Hair Studio', 'Hair salon', 'hair salons', 'beauty', 'Cardiff', 'CF10', 4.9, 301],
+    ['Meadowbrook Vets', 'Vet', 'vets', 'health', 'Exeter', 'EX4', 4.8, 420],
+    ['Muddy Paws Grooming', 'Dog groomer', 'dog groomers', 'service', 'Reading', 'RG1', 5.0, 184],
+    ['Northgate Solicitors', 'Solicitor', 'solicitors', 'pro', 'Newcastle', 'NE1', 4.6, 73],
+    ['Oakfield Joinery', 'Joiner', 'joiners', 'trade', 'Sheffield', 'S11', 4.9, 52],
+    ['Pennine Roofing', 'Roofer', 'roofers', 'trade', 'Huddersfield', 'HD1', 4.7, 95],
+    ['Riverside Motors', 'Car garage', 'garages', 'trade', 'Worcester', 'WR1', 4.6, 233],
+    ['Sparkle & Shine Cleaning', 'Cleaning company', 'cleaning companies', 'service', 'Milton Keynes', 'MK9', 4.8, 167],
+    ['Kingsway Estate Agents', 'Estate agent', 'estate agents', 'pro', 'Southampton', 'SO15', 4.5, 118],
+    ['Lantern Wedding Films', 'Videographer', 'videographers', 'creative', 'Canterbury', 'CT1', 5.0, 64],
+    ['Willow Tree Nursery', 'Nursery', 'nurseries', 'service', 'Cambridge', 'CB4', 4.9, 45],
+    ['Granite Gym', 'Gym', 'gyms', 'service', 'Aberdeen', 'AB10', 4.7, 290],
+    ['Fern & Feather Gifts', 'Gift shop', 'gift shops', 'retail', 'Whitby', 'YO21', 4.9, 210],
+    ['Taylor Builders', 'Builder', 'builders', 'trade', 'Swindon', 'SN1', 4.8, 71],
+    ['Sage Kitchen', 'Restaurant', 'restaurants', 'hosp', 'Edinburgh', 'EH3', 4.7, 640],
+    ['Elm Street Driving School', 'Driving school', 'driving schools', 'service', 'Derby', 'DE1', 4.9, 138],
+    ['Ivy Lane Beauty', 'Beauty salon', 'beauty salons', 'beauty', 'Bournemouth', 'BH1', 4.8, 205],
+    ['Darwin Removals', 'Removals company', 'removals companies', 'service', 'Shrewsbury', 'SY1', 4.7, 86],
+    ['Apex Fitness Coaching', 'Personal trainer', 'personal trainers', 'service', 'Birmingham', 'B15', 5.0, 58],
+    ['Greenway Garden Centre', 'Garden centre', 'garden centres', 'retail', 'Lincoln', 'LN2', 4.6, 980],
+    ['Quayside Opticians', 'Optician', 'opticians', 'health', 'Plymouth', 'PL1', 4.8, 122],
+    ['Westbury Wealth', 'Financial planner', 'financial planners', 'pro', 'Guildford', 'GU1', 4.9, 37],
+    ['Zest Juice Bar', 'Juice bar', 'juice bars', 'hosp', 'Liverpool', 'L1', 4.5, 144],
+    ['The Little Print Shop', 'Print shop', 'print shops', 'retail', 'Oxford', 'OX4', 4.8, 76],
+    ['Upton Tyres', 'Tyre shop', 'tyre shops', 'trade', 'Wigan', 'WN1', 4.7, 311],
+    ['Jubilee Taxis', 'Taxi firm', 'taxi firms', 'service', 'Hull', 'HU1', 4.3, 402],
+    ['Victoria Wedding Cakes', 'Cake maker', 'cake makers', 'hosp', 'Harrogate', 'HG2', 5.0, 89],
+    ['Yardley Landscapes', 'Landscaper', 'landscapers', 'trade', 'Solihull', 'B90', 4.8, 77]
+  ].map(function (a, i) { return { id: 'b' + i, name: a[0], cat: a[1], plural: a[2], g: a[3], town: a[4], pc: a[5], r: a[6], n: a[7] }; });
+
+  /* ---------- what owners want AI to help with ---------- */
+  var GOALS = {
+    quotes: { label: 'Write quotes and estimates faster', desc: 'Turn rough notes into clear quotes in minutes.', short: 'Faster quotes', module: 'Quotes in minutes, not evenings', auto: 'follow up every quote',
+      steps: ['Jot down the job as you would explain it to a colleague: what, where, materials and timings.', 'Ask AI to turn your notes into a clear, friendly quote. Keep your own prices. AI only writes the words.', 'Check every figure, add your prices and send it from your usual email.'],
+      prompt: 'I run {name}, {a_cat}{in_town}. Turn my notes into a clear, friendly quote for a customer. Use British English, list the work in simple steps, and leave the prices blank for me to fill in.\n\nMy notes: [paste your notes about the job]' },
+    enquiries: { label: 'Reply to enquiries faster', desc: 'Friendly replies to every enquiry, even on busy days.', short: 'Quicker replies', module: 'Answer every enquiry, even on busy days', auto: 'instant enquiry replies',
+      steps: ['Pick the three questions customers ask you most often.', 'Paste one real enquiry into AI and ask for a reply in your friendly style.', 'Save the best replies, so the next one takes a couple of minutes.'],
+      prompt: 'I run {name}, {a_cat}{in_town}. Write a short, friendly reply to this customer enquiry. Answer their question, suggest a next step and sign off from {name}. British English.\n\nEnquiry: [paste the enquiry]' },
+    invoices: { label: 'Chase unpaid invoices politely', desc: 'Polite reminders that get you paid on time.', short: 'Invoice chasing', module: 'Get paid on time, without awkward calls', auto: 'invoice reminders',
+      steps: ['List who owes you, how much and how late it is.', 'Ask AI for a friendly first reminder and a firmer second one.', 'Save both as email templates, so chasing takes seconds.'],
+      prompt: 'I run {name}, {a_cat}{in_town}. Write two short emails chasing an unpaid invoice: a friendly reminder for 7 days late and a firmer one for 21 days late. British English, polite and professional.\n\nDetails: [invoice number, amount, date]' },
+    admin: { label: 'Spend less time on admin', desc: 'Checklists and templates for the jobs you dread.', short: 'Less admin', module: 'Less paperwork, more real work', auto: 'a weekly admin checklist',
+      steps: ['Pick the one admin job you dislike most.', 'Describe it to AI and ask for a simpler checklist or template.', 'Use it for a week, then ask AI to improve it with what you learned.'],
+      prompt: 'I run {name}, {a_cat}{in_town}. This admin task takes me too long every week: [describe it]. Suggest a simpler way to do it, with a checklist or template I can reuse. British English, plain words.' },
+    docs: { label: 'Summarise long emails and documents', desc: 'Long reads boiled down to what matters.', short: 'Quick summaries', module: 'Read less, understand more', auto: 'daily email summaries',
+      steps: ['Copy a long email or document, and remove private details first.', 'Ask AI for a five-line summary plus any deadlines and actions.', 'Check the key points against the original before you act.'],
+      prompt: 'Summarise this for the owner of {name}, {a_cat}. Give me a five-line summary, any deadlines, and anything I need to do. British English.\n\nText: [paste the email or document, with private details removed]' },
+    reviews: { label: 'Get more Google reviews', desc: 'Ask happy customers at the right moment, and reply to every review.', short: 'More reviews', module: 'More five-star reviews, without nagging', auto: 'review requests after every job',
+      steps: ['Ask AI to write a short thank-you message that includes your review link.', 'Send it to happy customers on the day you finish the job.', 'Use AI to reply to every review, good or bad, in your own tone.'],
+      prompt: 'I run {name}, {a_cat}{in_town}. Write a short, warm message to send happy customers after a job, asking them to leave a Google review. Put [review link] where my link goes. British English, no pressure.' },
+    social: { label: 'Post on social media without the hassle', desc: 'A month of posts, written in one sitting.', short: 'Social posts', module: 'A month of posts in one sitting', auto: 'a weekly post plan',
+      steps: ['Tell AI what you do, who your customers are and what is coming up this month.', 'Ask for eight short posts, each with a photo idea.', 'Edit them into your own words and schedule them in one go.'],
+      prompt: 'I run {name}, {a_cat}{in_town}. Write eight short social media posts for this month: a mix of tips, behind the scenes and offers. Suggest a photo for each. British English, friendly, two hashtags at most.' },
+    profile: { label: 'Write better website and Google profile text', desc: 'Clear words that win customers.', short: 'Better profile text', module: 'Words that win customers', auto: 'monthly Google profile updates',
+      steps: ['Copy your current Google profile description or website home page text.', 'Ask AI to rewrite it so it is clearer and mentions your town and services.', 'Read it out loud. If it sounds like you, publish it.'],
+      prompt: 'I run {name}, {a_cat}{in_town}. Rewrite this description so it is clear and friendly and mentions my area and main services. Keep it under 750 characters for my Google profile. British English.\n\nCurrent text: [paste it]' },
+    followup: { label: 'Follow up quotes and win more jobs', desc: 'Gentle follow-ups that turn quiet quotes into work.', short: 'Quote follow-ups', module: 'Turn more quotes into jobs', auto: 'quote follow-ups',
+      steps: ['List the quotes you sent in the last month that went quiet.', 'Ask AI for a short, friendly follow-up that offers to answer questions.', 'From now on, send it three days after every quote.'],
+      prompt: 'I run {name}, {a_cat}{in_town}. Write a short, friendly follow-up for a customer who has not replied to my quote. Offer to answer questions and suggest a quick call. British English, not pushy.\n\nQuote details: [what the job was and when you sent it]' },
+    repeat: { label: 'Win more repeat customers', desc: 'Timely check-ins that bring past customers back.', short: 'Repeat customers', module: 'Keep customers coming back', auto: 'check-ins for past customers',
+      steps: ['Think about when past customers usually need you again.', 'Ask AI to write a friendly check-in message for that moment.', 'Send it to five past customers this week and note who replies.'],
+      prompt: 'I run {name}, {a_cat}{in_town}. Write a friendly check-in message for past customers, timed for when they might need us again. Include one useful tip. British English, short, no hard sell.' },
+    newcust: { label: 'Find new customers', desc: 'Practical ways to find more of your best customers.', short: 'New customers', module: 'Find your next twenty customers', auto: 'a weekly list of new leads',
+      steps: ['Describe your best customer to AI: who they are and why they chose you.', 'Ask where people like that look for a business like yours.', 'Pick one idea and try it for two weeks.'],
+      prompt: 'I run {name}, {a_cat}{in_town}. My best customers are [describe them]. Suggest five practical ways to find more customers like them nearby, starting with the cheapest. British English.' },
+    staff: { label: 'Train staff faster', desc: 'One-page guides that get new starters up to speed.', short: 'Staff training', module: 'Train new staff faster', auto: 'a welcome pack for new starters',
+      steps: ['Choose one task you explain to every new starter.', 'Talk it through with AI and ask for a one-page guide.', 'Give it to your next new starter and improve it with their questions.'],
+      prompt: 'I run {name}, {a_cat}{in_town}. Turn my explanation into a one-page guide for new staff, with simple steps and common mistakes to avoid. British English.\n\nMy explanation: [describe the task]' },
+    services: { label: 'Plan and price new services', desc: 'Test a new idea cheaply before you spend.', short: 'New services', module: 'Test a new idea before you spend', auto: 'monthly idea reviews',
+      steps: ['Describe the new service or product you are thinking about.', 'Ask AI for questions that check demand, and one simple test you can run.', 'Run the test before you spend real money.'],
+      prompt: 'I run {name}, {a_cat}{in_town}. I am thinking about offering [describe the idea]. Give me five questions to check whether customers want it and one cheap way to test it this month. British English.' },
+    bookings: { label: 'Fill the diary and cut no-shows', desc: 'Reminders and easy rebooking, so fewer empty slots.', short: 'Fewer no-shows', module: 'A fuller diary, fewer no-shows', auto: 'appointment reminders', notFor: ['retail'],
+      steps: ['Write down what you send customers before an appointment, if anything.', 'Ask AI for a friendly reminder and a short message for anyone who cannot make it.', 'Send reminders the day before every booking.'],
+      prompt: 'I run {name}, {a_cat}{in_town}. Write a friendly appointment reminder to send the day before, and a short message offering to rebook if they cannot make it. British English, under 300 characters each.' },
+    menus: { label: 'Write menus, offers and specials', desc: 'Tempting specials and offers, written for you.', short: 'Menus and offers', module: 'Specials, menus and offers in minutes', auto: 'a weekly offers email', onlyFor: ['hosp', 'retail', 'custom'],
+      steps: ['List what is in season, or what you need to sell this week.', 'Ask AI for tempting descriptions and one simple offer.', 'Use them on your board, your socials and your email.'],
+      prompt: 'I run {name}, {a_cat}{in_town}. Write tempting descriptions for this week’s specials and one simple offer to bring people in on quieter days. British English, short and warm.\n\nThis week: [list the items]' }
+  };
+  /* the words on the option buttons: a short action on wider screens, a shorter one on phones */
+  var CHIP = {
+    quotes: ['Write quotes faster', 'Faster quotes'], enquiries: ['Reply to enquiries', 'Quick replies'],
+    invoices: ['Chase unpaid invoices', 'Chase invoices'], admin: ['Less time on admin', 'Less admin'],
+    docs: ['Summarise emails', 'Email summaries'], reviews: ['Get more reviews', 'More reviews'],
+    social: ['Post on social media', 'Social posts'], profile: ['Better website text', 'Website text'],
+    followup: ['Follow up quotes', 'Follow-ups'], repeat: ['Bring customers back', 'Repeat business'],
+    newcust: ['Find new customers', 'New customers'], staff: ['Train staff faster', 'Staff training'],
+    services: ['Plan new services', 'New services'], bookings: ['Fewer no-shows', 'Fewer no-shows'],
+    menus: ['Menus and offers', 'Menus and offers']
+  };
+  var GROUPS = [
+    { key: 'time', title: 'Save time', sub: 'The jobs that eat into your evenings.', ids: ['quotes', 'enquiries', 'invoices', 'admin', 'docs', 'bookings'] },
+    { key: 'win', title: 'Win more work', sub: 'Ways to turn more people into customers.', ids: ['reviews', 'social', 'profile', 'followup', 'menus'] },
+    { key: 'grow', title: 'Grow your business', sub: 'Bigger moves for the months ahead.', ids: ['repeat', 'newcust', 'staff', 'services'] }
+  ];
+  var SUGGEST = {
+    trade: ['quotes', 'enquiries', 'followup', 'invoices', 'reviews'],
+    pro: ['docs', 'enquiries', 'admin', 'newcust', 'profile'],
+    hosp: ['social', 'reviews', 'menus', 'staff', 'repeat'],
+    retail: ['social', 'profile', 'repeat', 'reviews', 'newcust'],
+    health: ['bookings', 'reviews', 'enquiries', 'admin', 'staff'],
+    beauty: ['bookings', 'social', 'reviews', 'repeat', 'enquiries'],
+    service: ['enquiries', 'bookings', 'reviews', 'social', 'invoices'],
+    creative: ['enquiries', 'quotes', 'social', 'reviews', 'profile'],
+    custom: ['enquiries', 'admin', 'social', 'reviews', 'quotes']
+  };
+  var LEVELS = [
+    { label: 'Never used it', hint: 'We start from the very beginning.', intro: 'You have never used AI, which is a perfect place to start. If you can send a text message, you can do this.' },
+    { label: 'Tried it once or twice', hint: 'We build on what you have tried.', intro: 'You have had a go with AI. This module turns that into something useful for {name}.' },
+    { label: 'Use it now and then', hint: 'We make it useful every week.', intro: 'You know the basics. This module makes AI reliably useful for {name}.' },
+    { label: 'Use it most weeks', hint: 'We skip the obvious basics.', intro: 'You already use AI, so we skip the obvious and focus on better results for {name}.' },
+    { label: 'Use it most days', hint: 'We focus on dependable results.', intro: 'You are a regular, so this module goes straight to the habits that make AI dependable at work.' },
+    { label: 'I build things with it', hint: 'We move quickly to automations.', intro: 'You are ahead of most owners. Treat this as a quick refresher. The automation modules are where you will gain most.' }
+  ];
+  var BOTS = [
+    { k: 'openai', name: 'ChatGPT', by: 'by OpenAI', desc: 'The best known. A strong all-rounder for writing, ideas and questions.', url: 'https://chatgpt.com/' },
+    { k: 'claude', name: 'Claude', by: 'by Anthropic', desc: 'Excellent at careful writing and working through long documents.', url: 'https://claude.ai/new' },
+    { k: 'gemini', name: 'Gemini', by: 'by Google', desc: 'Works neatly with Gmail, Google Docs and your other Google tools.', url: 'https://gemini.google.com/app' }
+  ];
+
+  /* ---------- state ---------- */
+  var S = { phase: 'home', created: false, q: '', res: [], hi: -1, biz: null, goals: [], custom: {}, level: null,
+    sec: 0, secDone: 0, s2done: false, s2err: '', secDir: 'next', done1: false, signed: false,
+    ai: false, aiResult: null, aiNote: '', intro: true, morph: false, focus: null, lastPct: 0, loadId: 0,
+    at: 1, anim: null, ownOpen: false, popId: null, narrow: null };
+  var app = $('#app'), stage = $('#stage'), sticky = $('#sticky');
+  var sampleFn = null, nOwn = 0, timers = [], observers = [];
+
+  function goal(id) { return GOALS[id] || S.custom[id]; }
+  function aCat(b) { var c = (b.cat || 'business').toLowerCase(); return (/^[aeiou]/.test(c) ? 'an ' : 'a ') + c; }
+  function fill(t, b) { return t.replace(/\{name\}/g, b.name).replace(/\{a_cat\}/g, aCat(b)).replace(/\{in_town\}/g, b.town ? ' in ' + b.town : ''); }
+  function poss(n) { return /s$/i.test(n) ? n + '’' : n + '’s'; }
+  function cap(s) { s = String(s).trim(); return s.charAt(0).toUpperCase() + s.slice(1); }
+  function ready() { return !!S.biz && S.s2done && S.goals.length > 0 && S.level != null; }
+
+  /* ---------- step 2 sections: their trade first, then the general groups ---------- */
+  function relevant(id, g) { var x = GOALS[id]; if (x.onlyFor && x.onlyFor.indexOf(g) === -1) return false; if (x.notFor && x.notFor.indexOf(g) > -1) return false; return true; }
+  function sections() {
+    var g = S.biz ? S.biz.g : 'custom', sug = (SUGGEST[g] || SUGGEST.custom).filter(function (id) { return relevant(id, g); });
+    var out = [{ key: 'for', title: 'Picked for ' + (S.biz ? S.biz.plural : 'you'), sub: 'Tap everything that sounds useful. Choose as many as you like.', ids: sug }];
+    GROUPS.forEach(function (gr) {
+      var ids = gr.ids.filter(function (id) { return sug.indexOf(id) === -1 && relevant(id, g); });
+      if (ids.length) out.push({ key: gr.key, title: gr.title, sub: gr.sub, ids: ids });
+    });
+    return out;
+  }
+  function pct() {
+    if (!S.biz) return 0;
+    var n = sections().length;
+    var p = 25 + 50 * (S.s2done ? 1 : Math.min(S.secDone, n) / n);
+    if (S.s2done && S.level != null) p += 25;
+    return Math.round(p);
+  }
+
+  /* ---------- course plan and Module 1 ---------- */
+  function course() {
+    var b = S.biz, gs = S.goals.map(goal), g1 = gs[0] || GOALS.enquiries;
+    var t = ['AI basics for ' + b.plural];
+    gs.slice(0, 3).forEach(function (x) { t.push(x.module); });
+    ['Teach AI to write like you', 'Your first automation: ' + g1.auto, 'Grow with AI: reviews, posts and repeat work', 'Keep it safe: AI rules for your business'].forEach(function (x) { if (t.length < 7 && t.indexOf(x) === -1) t.push(x); });
+    while (t.length < 7) t.push('Answer customers faster');
+    t = t.slice(0, 7); t.push('Your 90-day AI plan for ' + b.name);
+    return { title: 'AI for ' + b.name, mods: t.map(function (x, i) { return { n: i + 1, title: x, locked: i > 1 || (i === 1 && !S.signed) }; }) };
+  }
+  function moduleOne() {
+    var b = S.biz, L = S.level == null ? 1 : S.level, g1 = goal(S.goals[0]) || GOALS.enquiries;
+    var m = {
+      lead: fill(LEVELS[L].intro, b),
+      whatIs: L <= 2 ? [
+        'AI chat tools are like a very quick assistant who has read most of the internet. You type a request in everyday words and get a written answer in seconds: an email, a quote, a social post or a plan.',
+        fill('It does not know {name} until you tell it about your business, and it can get things wrong. Treat it like a capable new starter: brilliant at first drafts, but you check the work before anything goes out.', b)
+      ] : [
+        fill('A quick refresher. AI chat tools predict useful text from your instructions, so what you get back depends on what you give: context about {name}, a clear task, and an example of work you like.', b),
+        'The habit that matters most is checking. AI is fast and confident, and sometimes wrong, so keep facts, prices and promises in your own hands.'
+      ],
+      winTitle: 'Your first win: ' + g1.short.toLowerCase(),
+      steps: g1.steps.slice(),
+      prompt: fill(g1.prompt, b)
+    };
+    if (S.aiResult) {
+      var r = S.aiResult;
+      if (r.lead) m.lead = r.lead;
+      if (r.whatIs && r.whatIs.length) m.whatIs = r.whatIs;
+      if (r.steps && r.steps.length) m.steps = r.steps;
+      if (r.prompt) m.prompt = r.prompt;
+    }
+    return m;
+  }
+
+  /* ---------- business search ---------- */
+  function results(q) {
+    q = q.trim().toLowerCase();
+    if (!q) return [];
+    var out = [];
+    BIZ.forEach(function (b) {
+      var n = b.name.toLowerCase(), s = -1;
+      if (n.indexOf(q) === 0) s = 0;
+      else if (n.split(/[\s&]+/).some(function (w) { return w.indexOf(q) === 0; })) s = 1;
+      else if (n.indexOf(q) > -1) s = 2;
+      else if (b.cat.toLowerCase().indexOf(q) === 0 || b.town.toLowerCase().indexOf(q) === 0) s = 3;
+      if (s > -1) out.push([s, b]);
+    });
+    out.sort(function (a, c) { return a[0] - c[0] || a[1].name.localeCompare(c[1].name); });
+    return out.slice(0, 5).map(function (x) { return x[1]; });
+  }
+  function hl(name, q) {
+    var t = q.trim(), i = name.toLowerCase().indexOf(t.toLowerCase());
+    if (i < 0 || !t) return esc(name);
+    return esc(name.slice(0, i)) + '<mark>' + esc(name.slice(i, i + t.length)) + '</mark>' + esc(name.slice(i + t.length));
+  }
+  function optHTML(b, i, q) {
+    return '<li class="biz-opt" role="option" id="bo-' + i + '" aria-selected="' + (i === S.hi) + '" data-act="biz-pick" data-i="' + i + '">' +
+      '<span class="bo-pin">' + IC.pin + '</span><span class="bo-main"><b>' + hl(b.name, q) + '</b><span>' + esc(b.cat) + ' · ' + esc(b.town) + ' ' + esc(b.pc) + '</span></span>' +
+      '<span class="bo-rate"><span class="st" aria-hidden="true">★</span> ' + b.r.toFixed(1) + ' <span style="color:var(--mut)">(' + b.n + ')</span></span></li>';
+  }
+  function updateBiz(input) {
+    var combo = input.closest('.combo'), pop = $('.pop', combo), list = $('.biz-list', pop), q = input.value;
+    S.q = q;
+    $('.clear', combo).hidden = !q;
+    if (!q.trim()) { pop.hidden = true; input.setAttribute('aria-expanded', 'false'); S.res = []; return; }
+    S.res = results(q); S.hi = S.res.length ? 0 : -1;
+    list.innerHTML = S.res.length ? S.res.map(function (b, i) { return optHTML(b, i, q); }).join('') :
+      '<li class="none">No matching profiles yet. Keep typing, or use the name as you typed it.</li>';
+    $('.use-typed', pop).textContent = 'Can’t see it? Use “' + q.trim() + '”';
+    pop.hidden = false; input.setAttribute('aria-expanded', 'true');
+    setActive(input);
+  }
+  function setActive(input) {
+    $$('.biz-opt').forEach(function (li, i) { li.setAttribute('aria-selected', String(i === S.hi)); });
+    if (S.hi > -1) { input.setAttribute('aria-activedescendant', 'bo-' + S.hi); var el = $('#bo-' + S.hi); if (el) el.scrollIntoView({ block: 'nearest' }); }
+    else input.removeAttribute('aria-activedescendant');
+  }
+  function pick(b) {
+    S.biz = b; S.q = ''; S.res = []; S.hi = -1;
+    S.sec = 0; S.secDone = 0; S.s2done = false; S.s2err = ''; S.secDir = 'next'; S.ownOpen = false;
+    S.at = 2; S.anim = 'step'; S.morph = true; S.focus = 's2-title';
+    renderCreator(); updateSlot(); keepCardInView();
+  }
+  function pickCustom() {
+    var n = S.q.trim(); if (!n) return;
+    pick({ id: 'own', name: n, cat: 'Business', plural: 'business owners', g: 'custom', town: '', pc: '', r: 0, n: 0, custom: true });
+  }
+
+  /* ---------- creator parts: one question at a time ---------- */
+  function comboHTML() {
+    return '<div class="combo"><div class="field">' + IC.search +
+      '<input id="biz" class="biz-input" type="text" inputmode="search" autocomplete="off" spellcheck="false" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="biz-list" placeholder="Type your business name, e.g. Harper &amp; Sons" value="' + esc(S.q) + '">' +
+      '<button type="button" class="clear" data-act="biz-clear" aria-label="Clear search"' + (S.q ? '' : ' hidden') + '>' + IC.x + '</button></div>' +
+      '<div class="pop" hidden><div class="pop-h"><span>Google Business Profiles</span><span>Sample data</span></div>' +
+      '<ul class="biz-list" id="biz-list" role="listbox" aria-label="Matching businesses"></ul>' +
+      '<div class="pop-foot"><button type="button" class="use-typed" data-act="biz-custom"></button><span class="pbg">powered by Google</span></div></div></div>';
+  }
+  function bizCardHTML() {
+    var b = S.biz;
+    return '<div class="bizcard"><span class="bc-map">' + IC.map + '</span><span class="bc-main"><b class="bc-name">' + esc(b.name) + '</b>' +
+      '<span class="bc-sub">' + esc(b.custom ? 'Added by you' : b.cat + ' · ' + b.town + ' ' + b.pc) + '</span>' +
+      (b.custom ? '<span class="bc-rate">Not on Google yet? That is fine.</span>' : '<span class="bc-rate"><span class="st" aria-hidden="true">' + stars(b.r) + '</span>' + b.r.toFixed(1) + ' · ' + b.n + ' reviews</span>') +
+      '</span><button type="button" class="bc-change" data-act="biz-change">Change</button></div>';
+  }
+  /* phones get two buttons per row, wider screens three, and the rows are balanced: 5 is 3 + 2, 4 is 2 + 2 */
+  function cardNarrow() { var c = $('#card'); return (c ? c.getBoundingClientRect().width : window.innerWidth) < 600; }
+  function rowSizes(n, max) {
+    var rows = Math.ceil(n / max), base = Math.floor(n / rows), extra = n % rows, out = [];
+    for (var r = 0; r < rows; r++) out.push(base + (r < extra ? 1 : 0));
+    return out;
+  }
+  function chipHTML(id) {
+    var x = goal(id), c = CHIP[id], on = S.goals.indexOf(id) > -1, t = c ? c[S.narrow ? 1 : 0] : x.short;
+    return '<button type="button" class="ch' + (S.popId === id ? ' bump' : '') + '" role="checkbox" aria-checked="' + on + '" data-act="goal" data-id="' + id + '"' + (c ? ' title="' + esc(x.desc) + '"' : '') + '>' +
+      '<span class="ch-ic" aria-hidden="true">' + IC.plus + IC.tk + '</span><span class="ch-t">' + esc(t) + '</span></button>';
+  }
+  function chipsHTML(items, tail) {
+    var h = '', k = 0;
+    if (items.length) rowSizes(items.length, S.narrow ? 2 : 3).forEach(function (n) { h += '<div class="crow">' + items.slice(k, k + n).join('') + '</div>'; k += n; });
+    return h + (tail ? '<div class="crow crow-tail">' + tail + '</div>' : '');
+  }
+  /* then pack them by their real widths: the fewest rows that fit, filled as evenly as possible, fuller rows first */
+  function balanceRows() {
+    var box = $('#chips'); if (!box) return;
+    var items = $$('.crow:not(.crow-tail) > .ch', box); if (!items.length) return;
+    var cap = S.narrow ? 2 : 3, n = items.length, max = box.clientWidth;
+    var gap = parseFloat(getComputedStyle($('.crow', box)).columnGap) || 0;
+    var w = items.map(function (el) { return el.offsetWidth; }), best = null;
+    function walk(start, left, acc) {
+      if (!left) {
+        if (start < n) return;
+        var spread = Math.max.apply(null, acc) - Math.min.apply(null, acc);
+        var front = acc.reduce(function (t, x, i) { return t + x * (acc.length - i); }, 0);
+        var score = spread * 100 - front;
+        if (!best || score < best.score) best = { rows: acc.slice(), score: score };
+        return;
+      }
+      for (var size = 1, width = 0; size <= cap && start + size <= n; size++) {
+        width += w[start + size - 1] + (size > 1 ? gap : 0);
+        if (width > max + 0.5 && size > 1) break;
+        acc.push(size); walk(start + size, left - 1, acc); acc.pop();
+      }
+    }
+    for (var k = Math.ceil(n / cap); k <= n && !best; k++) walk(0, k, []);
+    var now = $$('.crow:not(.crow-tail)', box).map(function (r) { return r.children.length; }).join();
+    if (!best || best.rows.join() === now) return;
+    var tail = $('.crow-tail', box), i = 0;
+    $$('.crow:not(.crow-tail)', box).forEach(function (r) { r.remove(); });
+    best.rows.forEach(function (size) {
+      var row = document.createElement('div'); row.className = 'crow';
+      for (var j = 0; j < size; j++) row.appendChild(items[i++]);
+      box.insertBefore(row, tail);
+    });
+  }
+  function secIds(i) {
+    var secs = sections(), ids = secs[i].ids.slice();
+    if (i === secs.length - 1) ids = ids.concat(Object.keys(S.custom));
+    return ids;
+  }
+  function nextLabel() {
+    var secs = sections(), i = S.sec;
+    if (i === secs.length - 1) return 'Next: your AI level';
+    var picked = secIds(i).filter(function (id) { return S.goals.indexOf(id) > -1; }).length;
+    return picked ? 'Next: ' + secs[i + 1].title.toLowerCase() : 'None of these, next';
+  }
+  function listHTML() {
+    var secs = sections(), i = S.sec, sc = secs[i], last = i === secs.length - 1;
+    var items = secIds(i).map(chipHTML), tail = '';
+    if (last && S.ownOpen) tail = '<span class="ch-own"><label class="sr" for="own-goal">Something else AI could help with</label><input id="own-goal" type="text" autocomplete="off" maxlength="60" placeholder="Type it here"><button type="button" data-act="own-add">Add</button></span>';
+    else if (last) items.push('<button type="button" class="ch ch-add" data-act="own-open"><span class="ch-ic" aria-hidden="true">' + IC.plus + '</span><span class="ch-t">Something else</span></button>');
+    return '<b class="s2-k" id="s2-title" tabindex="-1">' + esc(sc.title) + '<span class="sr">, list ' + (i + 1) + ' of ' + secs.length + '</span></b>' +
+      (i === 0 ? '<p class="s2-tip">Choose as many as you like</p>' : '') +
+      '<div class="chips" id="chips" role="group" aria-labelledby="cz-q s2-title">' + chipsHTML(items, tail) + '</div>' +
+      (S.s2err ? '<p class="s2-err" role="alert">' + esc(S.s2err) + '</p>' : '');
+  }
+  function lvDesc() { return S.level == null ? 'Pick a number. There are no wrong answers.' : '<b>' + S.level + ' · ' + LEVELS[S.level].label + '.</b> ' + LEVELS[S.level].hint; }
+  function levelHTML() {
+    var h = '<div class="lv-wrap"><div class="lvl" role="radiogroup" aria-labelledby="cz-q">';
+    for (var n = 0; n <= 5; n++) h += '<button type="button" class="lv" id="lv-' + n + '" role="radio" aria-checked="' + (S.level === n) + '" data-act="level" data-n="' + n + '" aria-label="' + n + ', ' + LEVELS[n].label + '">' + n + '</button>';
+    return h + '</div><div class="lv-ends" aria-hidden="true"><span>Never used it</span><span>Build things with it</span></div></div><p class="lv-desc" id="lv-desc" aria-live="polite">' + lvDesc() + '</p>';
+  }
+  function footHTML() {
+    var at = S.at, row;
+    var create = '<button type="button" class="btn-create" id="create" data-act="create"' + (ready() ? '' : ' aria-disabled="true"') + '>Create my course ' + IC.spark + '</button>';
+    var back = function (act) { return '<button type="button" class="btn-back" data-act="' + act + '">' + IC.back + 'Back</button>'; };
+    if (at === 1) row = S.biz ? '<button type="button" class="btn-next" data-act="to-lists">Continue ' + IC.arrow + '</button>' : create;
+    else if (at === 2) row = back('s2-back') + '<button type="button" class="btn-next" id="s2-next" data-act="s2-next"><span class="nl">' + esc(nextLabel()) + '</span>' + IC.arrow + '</button>';
+    else row = back('lv-back') + create;
+    return '<div class="cfoot" id="cfoot"><div class="pbar' + (S.lastPct > 0 && S.lastPct < 100 ? ' mid' : '') + '" id="pbar" role="progressbar" aria-label="Course progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + pct() + '"><i style="width:' + S.lastPct + '%"></i></div>' +
+      '<div class="cf-row">' + row + '</div></div>';
+  }
+  function wizardHTML() {
+    var a = S.anim, dir = S.secDir === 'back' ? ' back' : '';
+    function head(n, q, done, forId) {
+      return '<div class="cz-head' + (a === 'step' ? ' cz-in' + dir : '') + '"><span class="num' + (done ? ' ok' : '') + '">' + (done ? IC.checkSm : n) + '</span>' +
+        (forId ? '<label class="cz-q" id="cz-q" for="' + forId + '">' + q + '</label>' : '<h2 class="cz-q" id="cz-q" tabindex="-1">' + q + '</h2>') + '</div>';
+    }
+    function body(h) { return '<div class="cz-body' + (a ? ' cz-in' + dir : '') + '">' + h + '</div>'; }
+    var out;
+    if (S.at === 1) out = S.biz ? head(1, 'Your business', true) + body(bizCardHTML()) : head(1, 'Find your business', false, 'biz') + body(comboHTML());
+    else if (S.at === 2) out = head(2, 'What do you want AI to help with?') + body(listHTML());
+    else out = head(3, 'How much do you know about AI?') + body(levelHTML());
+    return '<div class="cz">' + out + '</div>' + footHTML();
+  }
+  function loadingHTML() {
+    var n = S.goals.length;
+    return '<div class="ld" id="ld" role="status" aria-live="polite"><div class="ld-head"><div class="ld-trio" aria-hidden="true">' + logoSpan('openai') + logoSpan('claude') + logoSpan('gemini') + '</div>' +
+      '<div><div class="ld-title">Writing ' + esc(poss(S.biz.name)) + ' course</div><div class="ld-note">' + (S.ai && sampleFn ? 'Live AI is writing Module 1 for you' : 'This takes a few seconds') + '</div></div></div>' +
+      '<ol class="ld-steps"><li><span class="ld-ic"></span><span>' + (S.biz.custom ? 'Reading what you told us' : 'Reading your Google profile') + '</span></li>' +
+      '<li><span class="ld-ic"></span><span>Matching lessons to your ' + n + ' ' + (n === 1 ? 'goal' : 'goals') + '</span></li>' +
+      '<li><span class="ld-ic"></span><span>Writing Module 1 for level ' + S.level + '</span></li>' +
+      '<li><span class="ld-ic"></span><span>Choosing an AI tool for each lesson</span></li></ol><div class="ld-bar"><i id="ld-bar"></i></div></div>';
+  }
+  function readyHTML() {
+    var c = course();
+    return '<div class="rd"><span class="tag ok">' + IC.checkSm + ' Your course is ready</span><h2 class="rd-h">' + esc(c.title) + '</h2>' +
+      '<p class="rd-p">8 modules, written for level ' + S.level + '. Module 1 is free to start now.</p><ol class="rd-list">' +
+      c.mods.slice(0, 3).map(function (m) { return '<li><span>' + m.n + '</span>' + esc(m.title) + '</li>'; }).join('') + '<li class="more">and 5 more modules</li></ol>' +
+      '<div class="rd-row"><button type="button" class="btn-create" id="open-m1" data-act="open-m1">Open Module 1 ' + IC.arrow + '</button><button type="button" class="link-btn" data-act="restart">Start again</button></div></div>';
+  }
+  function creatorHTML() {
+    if (S.phase === 'loading') return loadingHTML();
+    if (S.created) return readyHTML();
+    return wizardHTML();
+  }
+  function renderCreator() {
+    var card = $('#card'), inner = $('#creator'), top = $('#top');
+    if (!inner) return;
+    var h0 = inner.offsetHeight;
+    if (renderCreator.an) renderCreator.an.cancel();
+    card.classList.toggle('is-loading', S.phase === 'loading');
+    if (top) top.classList.toggle('working', !!S.biz && !S.created);
+    S.narrow = cardNarrow();
+    inner.innerHTML = creatorHTML();
+    balanceRows();
+    S.anim = null; S.popId = null;
+    animateProgress();
+    var h1 = inner.offsetHeight;
+    if (h0 && h1 && Math.abs(h1 - h0) > 1 && !RM && inner.animate) {
+      inner.classList.add('sizing');
+      var an = renderCreator.an = inner.animate([{ height: h0 + 'px' }, { height: h1 + 'px' }], { duration: 420, easing: 'cubic-bezier(.2,.75,.25,1)' });
+      an.onfinish = an.oncancel = function () { inner.classList.remove('sizing'); if (renderCreator.an === an) renderCreator.an = null; };
+    }
+    if (S.focus) {
+      var f = document.getElementById(S.focus);
+      S.focus = null;
+      if (f) f.focus({ preventScroll: true });
+    }
+  }
+  /* if the page was scrolled while typing, bring the whole creator back into view */
+  function keepCardInView() {
+    later(function () { var c = $('#card'); if (!c) return; var r = c.getBoundingClientRect(); if (r.bottom > window.innerHeight - 4 || r.top < 40) goTop(); }, 460);
+  }
+  function animateProgress() {
+    var bar = $('#pbar'); if (!bar) return;
+    var p = pct();
+    bar.setAttribute('aria-valuenow', p);
+    requestAnimationFrame(function () { requestAnimationFrame(function () { bar.firstChild.style.width = p + '%'; bar.classList.toggle('mid', p > 0 && p < 100); }); });
+    S.lastPct = p;
+  }
+  function updateSlot() {
+    var sl = $('#slot'); if (!sl) return;
+    sl.textContent = S.biz ? S.biz.name + '.' : 'your business.';
+    fitHeadline();
+    if (S.morph) { sl.classList.remove('morph'); void sl.offsetWidth; sl.classList.add('morph'); S.morph = false; }
+  }
+  /* a long business name shrinks the headline a little, so it stays on two lines and the creator keeps one screen */
+  function fitHeadline() {
+    var h = $('.hero-h'); if (!h) return;
+    h.style.fontSize = '';
+    if (!S.biz) return;
+    var cs = getComputedStyle(h), base = parseFloat(cs.fontSize), lh = parseFloat(cs.lineHeight) / base || 1, size = base;
+    while (h.offsetHeight > size * lh * 2.4 && size > base * 0.7) { size = Math.floor(size * 0.92); h.style.fontSize = size + 'px'; }
+  }
+
+  /* ---------- the AI pill ---------- */
+  function listText(a) { return a.length > 1 ? a.slice(0, -1).join(', ') + ' and ' + a[a.length - 1] : a.join(''); }
+  function pillHTML() {
+    var names = listText(AIS.map(function (x) { return x.name; }));
+    var items = RM ? '<span class="rot-item rot-all on">' + AIS.map(function (x) { return '<img src="' + x.logo + '" alt="">'; }).join('') + '</span>'
+      : AIS.map(function (x, i) { return '<span class="rot-item' + (i ? '' : ' on') + '"><img src="' + x.logo + '" alt="">' + esc(x.name) + '</span>'; }).join('');
+    return '<div class="pill in" id="pill"><span class="sr">Learn ' + esc(names) + '</span><span class="pl-k" aria-hidden="true">Learn</span>' +
+      '<span class="rot" aria-hidden="true"><span class="rot-track" id="rot">' + items + '</span></span></div>';
+  }
+  /* one swipe every ROT_EVERY ms. It holds still while someone is using the course creator or hovering the pill,
+     and when the pill is off screen or the tab is hidden, then waits a moment before it carries on. */
+  var rot = { t: 0, i: 0, hover: false, seen: true, held: false, io: null };
+  function stopRotator() { clearTimeout(rot.t); if (rot.io) rot.io.disconnect(); rot.io = null; }
+  function startRotator() {
+    stopRotator();
+    var pill = $('#pill');
+    if (!pill || RM || AIS.length < 2) return;
+    rot.i = 0; rot.hover = false; rot.seen = true; rot.held = false;
+    pill.addEventListener('pointerenter', function (e) { if (e.pointerType === 'mouse') rot.hover = true; });
+    pill.addEventListener('pointerleave', function () { rot.hover = false; });
+    if ('IntersectionObserver' in window) {
+      rot.io = new IntersectionObserver(function (es) { rot.seen = es[es.length - 1].isIntersecting; });
+      rot.io.observe(pill);
+    }
+    rot.t = setTimeout(rotTick, ROT_EVERY + 700);
+  }
+  function rotHeld() {
+    var card = $('#card');
+    return document.hidden || !rot.seen || rot.hover || !!(card && card.contains(document.activeElement));
+  }
+  function rotTick() {
+    var track = $('#rot'); if (!track) return;
+    if (rotHeld()) { rot.held = true; rot.t = setTimeout(rotTick, 400); return; }
+    if (rot.held) { rot.held = false; rot.t = setTimeout(rotTick, 900); return; }
+    var items = track.children, cur = items[rot.i];
+    rot.i = (rot.i + 1) % items.length;
+    var nx = items[rot.i];
+    cur.classList.remove('on'); cur.classList.add('out');
+    nx.classList.remove('out'); nx.classList.add('on');
+    setTimeout(function () { cur.classList.remove('out'); }, 800);
+    rot.t = setTimeout(rotTick, ROT_EVERY);
+  }
+
+  /* ---------- the rest of the home page ---------- */
+  function navHTML() {
+    return '<header class="nav"><div class="nav-in wrap"><a class="brand" href="#top" data-act="top" aria-label="Cayenne home"><img src="' + IMG.logo + '" alt="Cayenne" width="128" height="36"></a>' +
+      '<nav class="links" aria-label="Main"><a href="course.html">Course</a><a href="audit.html">Free AI audit</a><a href="services.html">Services</a><a href="about.html">About</a></nav>' +
+      '<a class="signin" href="signin.html">Sign in</a><button type="button" class="menu" aria-label="Menu" aria-expanded="false" data-act="menu">' + IC.menu + '</button>' +
+      '<div class="mnav" id="mnav" hidden><a href="course.html">Course<span aria-hidden="true">→</span></a><a href="audit.html">Free AI audit<span aria-hidden="true">→</span></a><a href="services.html">Services<span aria-hidden="true">→</span></a><a href="about.html">About<span aria-hidden="true">→</span></a><a href="signin.html">Sign in<span aria-hidden="true">→</span></a></div></div></header>';
+  }
+  function heroHTML() {
+    return '<section class="snap hero" id="top"><div class="heat" aria-hidden="true"><i class="h1"></i><i class="h2"></i><i class="h3"></i></div>' + navHTML() +
+      '<div class="hero-main wrap">' +
+      pillHTML() +
+      '<h1 class="hero-h in d1">A free AI course, built around <span class="slot" id="slot">' + (S.biz ? esc(S.biz.name) + '.' : 'your business.') + '</span></h1>' +
+      '<div class="lede-w"><div><p class="lede in d2">Pick your business and your goals. Get your first lesson in under a minute.</p></div></div>' +
+      '<div class="card in d3" id="card"><div class="card-in" id="creator"></div></div>' +
+      '<div class="alt-w"><div><p class="alt in d4">Prefer us to set it up for you? <a href="audit.html">Get a free AI audit</a></p></div></div></div></section>';
+  }
+  function courseHTML() {
+    var stages = [
+      ['The basics', 'Module 1 · No sign-up', 'What AI is, the three chatbots worth knowing, and your first win.'],
+      ['Your everyday work', 'Modules 2 to 5', 'Quotes, replies, posts and admin, done in minutes instead of hours.'],
+      ['Automations', 'Modules 6 and 7', 'Let AI handle the repeat jobs while you get on with the real work.'],
+      ['Your plan', 'Module 8', 'A 90-day plan for your business, so the new habits stick.']
+    ];
+    return '<section class="snap sec s-course" id="course"><div class="heat" aria-hidden="true"><i class="h1"></i></div><div class="wrap center">' +
+      '<span class="sec-k"><i aria-hidden="true"></i>The free course</span>' +
+      '<h2 class="sec-h">From your first question to your <em>first automation.</em></h2>' +
+      '<p class="sec-sub">Eight short modules, written around your business. Learn at your own pace, on your phone or computer.</p>' +
+      '<ol class="path reveal">' + stages.map(function (s, i) { return '<li class="ps"><span class="ps-n">' + (i + 1) + '</span><b>' + s[0] + '</b><small>' + s[1] + '</small><p>' + s[2] + '</p></li>'; }).join('') + '</ol>' +
+      '<div class="course-foot"><div class="lg-row"><span class="k">You learn all three</span>' +
+      BOTS.map(function (x) { return '<span class="lg"><span><img src="' + IMG[x.k] + '" alt=""></span>' + x.name + '</span>'; }).join('') + '</div>' +
+      '<a class="btn-create" href="#top" data-act="start">Start the free course ' + IC.arrow + '</a></div></div></section>';
+  }
+  function auditHTML() {
+    var bars = [['Appointment reminders', '3.5 h', 1], ['Replying to enquiries', '2.5 h', .71], ['Admin and paperwork', '2 h', .57], ['Review requests', '1 h', .29]];
+    return '<section class="snap sec s-audit" id="audit"><div class="heat" aria-hidden="true"><i class="h1"></i></div><div class="wrap split">' +
+      '<div><span class="sec-k"><i aria-hidden="true"></i>Free AI audit</span>' +
+      '<h2 class="sec-h">Not sure where AI fits? <em>We’ll show you.</em></h2>' +
+      '<p class="sec-sub">Tell us how your business runs. We find where AI saves you time or wins you work, and put real numbers on it.</p>' +
+      '<ul class="ticks"><li>' + IC.check + '<span><b>Short and simple.</b> A few questions about how you work today.</span></li><li>' + IC.check + '<span><b>Real numbers.</b> The hours you could save, worked out for you.</span></li><li>' + IC.check + '<span><b>A clear plan.</b> Use it yourself, or have us build it for you.</span></li></ul>' +
+      '<div class="cta-row"><a class="btn-create" href="audit.html">Get a free AI audit ' + IC.arrow + '</a><span class="note">Free · No obligation</span></div></div>' +
+      '<div class="report reveal" aria-label="Example audit report"><div class="rp-top"><span class="rp-k"><i aria-hidden="true"></i>AI audit</span><span class="rp-ex">Example report</span></div>' +
+      '<div class="rp-biz"><span class="bc-map">' + IC.map + '</span><div><b>Harbourside Dental</b><span>Dental practice · Brighton</span></div></div>' +
+      '<div class="rp-big"><span class="rp-num">9<small>h</small></span><span class="rp-lbl">a week AI could save this practice (estimate)</span></div>' +
+      '<ul class="rp-bars">' + bars.map(function (b) { return '<li><span>' + b[0] + '</span><b>' + b[1] + '</b><span class="bar"><i style="width:' + (b[2] * 100) + '%"></i></span></li>'; }).join('') + '</ul>' +
+      '<div class="rp-first">' + IC.bulb + '<span>Start with <b>automatic reminders and rebooking</b></span></div></div></div></section>';
+  }
+  function servicesHTML() {
+    var sv = [
+      ['train', 'AI training', 'Workshops for you and your team.', ['One-to-one sessions', 'Team workshops', 'Ongoing support']],
+      ['bolt', 'Automations', 'Replies, reminders and follow-ups on autopilot.', ['Enquiry replies', 'Quote follow-ups', 'Invoice reminders']],
+      ['tool', 'Custom AI tools', 'Your own assistant or CRM, built for you.', ['AI assistants', 'Simple CRMs', 'Report writers']],
+      ['globe', 'Websites and SEO', 'Get found on Google and win more enquiries.', ['Websites', 'Google profile', 'Local SEO']]
+    ];
+    return '<section class="snap sec s-serv" id="services"><div class="heat" aria-hidden="true"><i class="h1"></i></div><div class="wrap center">' +
+      '<span class="sec-k"><i aria-hidden="true"></i>Our services</span>' +
+      '<h2 class="sec-h">Rather have it <em>done for you?</em></h2>' +
+      '<p class="sec-sub">We set up the tools, automate the busywork and train your team.</p>' +
+      '<div class="serv">' + sv.map(function (s) { return '<div class="sv"><span class="sv-ic">' + IC[s[0]] + '</span><b>' + s[1] + '</b><p>' + s[2] + '</p><ul>' + s[3].map(function (x) { return '<li>' + x + '</li>'; }).join('') + '</ul></div>'; }).join('') + '</div>' +
+      '<div class="cta-row"><a class="btn-primary" href="services.html">See our services ' + IC.arrow + '</a></div></div></section>';
+  }
+  function faqHTML() {
+    var qs = [
+      ['Is it really free? What’s the catch?', 'Yes, the whole course is free and yours to keep. Some owners later ask us to set things up for them, and that is how Cayenne earns its living. You never have to.'],
+      ['I’m not techy. Can I do this?', 'Yes. If you can send an email or a text, you can use AI. Every lesson is in plain English and uses your own business as the example.'],
+      ['Which AI tools will I learn?', 'ChatGPT, Claude, Gemini, Perplexity and Copilot. You will learn what each one is best at, and which to reach for on each job.'],
+      ['Is my business data safe?', 'We only ask for your business name and what you want help with. The course also shows you what never to paste into a chatbot, and how to keep customer details private.'],
+      ['How long does it take?', 'Each lesson takes 5 to 10 minutes. Module 1 is ready the moment you create your course, with no sign-up.'],
+      ['Do I have to pay for ChatGPT or Claude?', 'No. The free versions are enough for the whole course. If you want more later, the course helps you decide whether a paid plan is worth it.']
+    ];
+    return '<section class="snap sec s-faq" id="faq"><div class="heat" aria-hidden="true"><i class="h1"></i></div><div class="wrap center">' +
+      '<span class="sec-k"><i aria-hidden="true"></i>Questions</span><h2 class="sec-h">Questions owners <em>ask us.</em></h2>' +
+      '<div class="faq">' + qs.map(function (q, i) {
+        return '<details' + (i === 0 ? ' data-first' : '') + '><summary>' + q[0] + '<span class="fq-ic" aria-hidden="true"></span></summary><div class="fq-a"><p>' + q[1] + '</p></div></details>';
+      }).join('') + '</div></div></section>';
+  }
+  function whyHTML() {
+    return '<section class="snap sec s-why" id="why"><div class="heat" aria-hidden="true"><i class="h1"></i></div><div class="why"><div class="wrap why-grid">' +
+      '<div><span class="sec-k"><i aria-hidden="true"></i>Why free?</span><h2 class="sec-h">Why is the course <em>free?</em></h2>' +
+      '<p class="why-p">Because owners who understand AI make better decisions about it. Some will do everything themselves with the course. Some will want a hand. Either way, the course is yours to keep.</p>' +
+      '<div class="cta-row"><a class="btn-create" href="#top" data-act="start">Start the free course ' + IC.arrow + '</a><a class="btn-ghost" href="audit.html">Get a free AI audit</a></div></div>' +
+      '<ol class="ways"><li class="way"><span>1</span><b>Learn it yourself</b><p>The free course: eight modules, at your own pace.</p></li>' +
+      '<li class="way"><span>2</span><b>Get a plan</b><p>The free AI audit: where AI fits, with real numbers.</p></li>' +
+      '<li class="way"><span>3</span><b>Have it built</b><p>Our services: we set it up and look after it.</p></li></ol></div></div>' +
+      '<footer class="foot"><div class="wrap"><div class="foot-in"><div class="foot-brand"><img src="' + IMG.logo + '" alt="Cayenne"><p>Plain-English AI for UK businesses. Learn it, plan it or have it built.</p></div>' +
+      '<div><h4>Cayenne</h4><ul><li><a href="course.html">The free course</a></li><li><a href="audit.html">Free AI audit</a></li><li><a href="services.html">Services</a></li><li><a href="guides.html">Guides</a></li></ul></div>' +
+      '<div><h4>Company</h4><ul><li><a href="about.html">About</a></li><li><a href="partners.html">Partners</a></li><li><a href="contact.html">Contact</a></li><li><a href="signin.html">Sign in</a></li></ul></div></div>' +
+      '<div class="foot-base"><span>© 2026 Cayenne. Made in the UK.</span><nav aria-label="Legal"><a href="legal.html#privacy">Privacy</a><a href="legal.html#cookies">Cookies</a><a href="legal.html#terms">Terms</a></nav></div></div></footer></section>';
+  }
+
+  /* ---------- module 1 and sign-up ---------- */
+  function tocList(c) {
+    return '<ol class="md-toc">' + c.mods.map(function (m) {
+      var cls = m.n === 1 ? 'cur' + (S.done1 ? ' fin' : '') : (m.locked ? 'lock' : 'open2');
+      return '<li class="' + cls + '"><span class="md-tn">' + (m.n === 1 && S.done1 ? IC.checkSm : m.n) + '</span><span>' + esc(m.title) + '</span>' + (m.locked ? IC.lock : '') + '</li>';
+    }).join('') + '</ol>';
+  }
+  function moduleHTML() {
+    var c = course(), m = moduleOne(), b = S.biz, done = S.done1 ? 1 : 0;
+    var bots = BOTS.map(function (x) { return '<a class="bot" href="' + x.url + '" target="_blank" rel="noopener"><span class="bot-l"><img src="' + IMG[x.k] + '" alt=""></span><b>' + x.name + '</b><small>' + x.by + '</small><p>' + x.desc + '</p></a>'; }).join('');
+    var opens = BOTS.map(function (x) { return '<a class="open" href="' + x.url + '" target="_blank" rel="noopener"><img src="' + IMG[x.k] + '" alt="">' + x.name + '</a>'; }).join('');
+    var gate = S.signed ?
+      '<div class="gate-ok"><b>You’re in. Module 2 is unlocked.</b><span>Prototype: this is where Google sign-in opens. After it, Module 2 unlocks and progress is saved to your account.</span></div>' :
+      '<button type="button" class="gbtn" data-act="google">' + IC.g + '<span>Continue with Google</span></button><p class="gate-fine">Free. We only use your name and email to save your course.</p>';
+    return '<div class="md">' +
+      '<header class="md-top"><div class="md-top-in wrap"><a class="brand" href="#" data-act="home" aria-label="Back to the home page"><img src="' + IMG.logo + '" alt="Cayenne" width="112" height="32"></a>' +
+      '<div class="md-course"><span>Your course</span><b>' + esc(c.title) + '</b></div>' +
+      '<div class="md-prog"><span>' + done + ' of 8 done</span><span class="md-bar" aria-label="' + done + ' of 8 modules done"><i style="width:' + (done ? 12.5 : 3) + '%"></i></span></div>' +
+      (S.signed ? '<span class="md-save">' + IC.g + 'Saved</span>' : '<a class="md-save" href="#signup" data-act="to-gate">' + IC.g + 'Save progress</a>') + '</div></header>' +
+      '<div class="md-body wrap"><aside class="md-side" aria-label="Course outline"><div class="md-side-h">8 modules · made for ' + esc(b.name) + '</div>' + tocList(c) + '</aside>' +
+      '<article class="md-art"><details class="md-out-m"><summary>Your course · 8 modules ' + IC.chev + '</summary>' + tocList(c) + '</details>' +
+      '<div class="md-meta"><span class="tag ok">Module 1 · Ready</span><span class="tag">About 8 minutes</span><span class="tag">Written for level ' + S.level + '</span>' + (S.aiResult ? '<span class="tag">Written live by AI</span>' : '') + '</div>' +
+      '<h1 class="md-h1">' + esc(c.mods[0].title) + '</h1><p class="md-lead">' + esc(m.lead) + '</p>' + (S.aiNote ? '<p class="ai-note">' + esc(S.aiNote) + '</p>' : '') +
+      '<section class="md-sec"><h2><span class="md-sn">1</span>What AI is</h2>' + m.whatIs.map(function (p) { return '<p>' + esc(p) + '</p>'; }).join('') + '</section>' +
+      '<section class="md-sec"><h2><span class="md-sn">2</span>The three chatbots worth knowing</h2><div class="bots">' + bots + '</div><p class="md-note">All three have free versions. Pick one and stick with it while you learn.</p></section>' +
+      '<section class="md-sec"><h2><span class="md-sn">3</span>' + esc(m.winTitle) + '</h2><p>Here is how AI can help ' + esc(b.name) + ' with this, in three steps.</p><ol class="steps">' + m.steps.map(function (s) { return '<li>' + esc(s) + '</li>'; }).join('') + '</ol></section>' +
+      '<section class="md-sec"><h2><span class="md-sn">4</span>Try it now</h2><div class="prompt"><div class="prompt-h"><span>Your prompt</span><button type="button" class="btn-copy" data-act="copy">' + IC.copy + 'Copy prompt</button></div>' +
+      '<p class="prompt-t" id="prompt-t">' + esc(m.prompt) + '</p><div class="prompt-o">Paste it into ' + opens + '</div></div></section>' +
+      '<section class="md-sec"><h2><span class="md-sn">5</span>Two golden rules</h2><ul class="rules"><li><b>Keep private things private</b>Never paste bank details, passwords or medical notes into a chatbot.</li><li><b>You have the final say</b>Always check facts, prices and dates before anything goes to a customer.</li></ul></section>' +
+      '<div class="md-done">' + (S.done1 ? '<span class="done-ok">' + IC.check + 'Module 1 done. Nice work.</span>' : '<button type="button" class="btn-primary" data-act="done1">Mark Module 1 as done ' + IC.check + '</button>') + '</div>' +
+      '<section class="gate" id="signup" aria-labelledby="gate-h"><div><span class="gate-k">Up next</span><h2 id="gate-h">Module 2: ' + esc(c.mods[1].title) + '</h2><p>Create your free account to unlock Module 2 and keep track of your progress. It takes one tap.</p></div>' +
+      '<div class="gate-r">' + gate + '</div></section></article></div></div>';
+  }
+
+  /* ---------- render ---------- */
+  function renderShell() {
+    observers.forEach(function (o) { o.disconnect(); }); observers = [];
+    stopRotator();
+    if (S.phase === 'module') { app.innerHTML = moduleHTML(); setSticky(false); return; }
+    app.innerHTML = heroHTML() + courseHTML() + auditHTML() + servicesHTML() + faqHTML() + whyHTML();
+    var fq = $('#faq details[data-first]'); if (fq && !cardNarrow() && window.innerHeight >= 820) fq.open = true;
+    if (S.intro) { app.classList.add('intro'); S.intro = false; clearTimeout(renderShell.t); renderShell.t = setTimeout(function () { app.classList.remove('intro'); }, 1500); }
+    renderCreator(); fitHeadline();
+    var sb = $('#sticky .btn-create'); if (sb) sb.textContent = S.created ? 'Continue your course' : 'Start the free course';
+    watch();
+    startRotator();
+  }
+  function stickyCheck() {
+    if (S.phase === 'module') { setSticky(false); return; }
+    var mid = window.innerHeight * 0.5, cur = null;
+    $$('.snap').forEach(function (el) { var r = el.getBoundingClientRect(); if (r.top <= mid && r.bottom > mid) cur = el.id; });
+    setSticky(cur === 'audit' || cur === 'services' || cur === 'faq');
+  }
+  window.addEventListener('scroll', function () { if (!stickyCheck.f) { stickyCheck.f = true; requestAnimationFrame(function () { stickyCheck.f = false; stickyCheck(); }); } }, { passive: true });
+  function setSticky(on) { sticky.classList.toggle('show', on); if (on) sticky.removeAttribute('inert'); else sticky.setAttribute('inert', ''); }
+  function watch() {
+    if (!('IntersectionObserver' in window)) return;
+    var o1 = new IntersectionObserver(function () { stickyCheck(); }, { threshold: [0, 0.25, 0.5, 0.75, 1] });
+    $$('.snap').forEach(function (el) { o1.observe(el); });
+    observers.push(o1);
+    stickyCheck();
+    /* decorative fills play once when their screen comes into view; text is never hidden */
+    var vh = window.innerHeight;
+    var o2 = new IntersectionObserver(function (es) {
+      es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.remove('armed'); o2.unobserve(e.target); } });
+    }, { threshold: 0.35 });
+    $$('.reveal').forEach(function (el) {
+      var host = el.closest('.sec') || el;
+      if (host.getBoundingClientRect().top > vh * 0.9) { host.classList.add('armed'); o2.observe(host); }
+    });
+    observers.push(o2);
+  }
+  function sync() {
+    $$('.ch[data-id]').forEach(function (b) { b.setAttribute('aria-checked', String(S.goals.indexOf(b.dataset.id) > -1)); });
+    var nl = $('#s2-next .nl'); if (nl) nl.textContent = nextLabel();
+    $$('.lv').forEach(function (b) { b.setAttribute('aria-checked', String(S.level === +b.dataset.n)); });
+    var d = $('#lv-desc'); if (d) d.innerHTML = lvDesc();
+  }
+  function later(fn, ms) { var id = S.loadId; timers.push(setTimeout(function () { if (id === S.loadId) fn(); }, ms)); }
+  function cancelTimers() { timers.forEach(clearTimeout); timers = []; S.loadId++; }
+  function nudge(el) { if (!el) return; el.classList.remove('nudge'); void el.offsetWidth; el.classList.add('nudge'); }
+  function toast(t) { var el = $('#toast'); el.textContent = String(t).replace(/^Prototype:\s*/, ''); el.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(function () { el.hidden = true; }, 2600); }
+  function scrollToEl(el, block) {
+    if (!el) return;
+    var r = el.getBoundingClientRect(), top = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--topbar')) || 36;
+    if (r.top < top + 8 || r.top > window.innerHeight * 0.55) {
+      var y = window.scrollY + r.top - top - (block === 'center' ? Math.max(0, (window.innerHeight - top - r.height) / 2) : 16);
+      try { window.scrollTo({ top: y, behavior: 'smooth' }); } catch (e) { window.scrollTo(0, y); }
+    }
+  }
+  function goTop() { try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (e) { window.scrollTo(0, 0); } }
+
+  /* ---------- loading ---------- */
+  function startLoading() {
+    if (!ready()) return;
+    S.phase = 'loading'; S.aiResult = null; S.aiNote = '';
+    renderCreator();
+    scrollToEl($('#card'), 'center');
+    var id = S.loadId;
+    function stepAt(k) {
+      if (id !== S.loadId) return;
+      var lis = $$('#ld .ld-steps li'), bar = $('#ld-bar');
+      lis.forEach(function (li, i) { li.classList.toggle('ok', i < k); li.classList.toggle('on', i === k); });
+      if (bar) bar.style.width = Math.max(4, k / 4 * 100) + '%';
+    }
+    stepAt(0);
+    var aiP = (S.ai && sampleFn) ? runAI() : Promise.resolve(null);
+    later(function () { stepAt(1); }, 1100);
+    later(function () { stepAt(2); }, 2300);
+    var minWait = new Promise(function (r) { later(r, 3500); });
+    Promise.all([minWait, aiP]).then(function (v) {
+      if (id !== S.loadId) return;
+      S.aiResult = v[1];
+      stepAt(3);
+      later(function () { stepAt(4); later(function () { S.created = true; S.phase = 'module'; renderShell(); window.scrollTo(0, 0); }, 600); }, 900);
+    });
+  }
+  function clean(s) { return String(s || '').replace(/\s*—\s*/g, ', ').replace(/\s*–\s*/g, ' to ').trim(); }
+  function runAI() {
+    var b = S.biz, gl = S.goals.map(function (id) { return goal(id).label; });
+    var prompt = 'You are writing Module 1 of a free AI course for the owner of a small UK business.\n' +
+      'Business: ' + b.name + (b.custom ? '' : ', ' + aCat(b) + ' in ' + b.town) + '.\n' +
+      'What they want AI to help with: ' + gl.join('; ') + '.\n' +
+      'Their AI knowledge: level ' + S.level + ' of 5 (' + LEVELS[S.level].label + ').\n' +
+      'Write in plain British English, warm and practical, with no jargon and no em dashes. Speak to the owner as "you".\n' +
+      'Reply with JSON only, in this shape:\n' +
+      '{"lead": "one or two sentences welcoming them, mentioning their business and their level",\n' +
+      ' "whatIs": ["two short paragraphs, under 60 words each, explaining what AI chat tools are, with an example from their kind of business"],\n' +
+      ' "steps": ["three short, concrete steps, under 25 words each, to use AI for: ' + gl[0] + '"],\n' +
+      ' "prompt": "one ready-to-paste prompt for ChatGPT, Claude or Gemini that does that first job for their business, with [square brackets] where they add their own details"}';
+    return sampleFn.json(prompt, { modelTier: 'default' }).then(function (r) {
+      if (r && Array.isArray(r.whatIs) && Array.isArray(r.steps) && typeof r.prompt === 'string') {
+        return { lead: clean(r.lead), whatIs: r.whatIs.slice(0, 3).map(clean), steps: r.steps.slice(0, 4).map(clean), prompt: clean(r.prompt) };
+      }
+      S.aiNote = 'Live AI sent an unexpected answer, so this is the designed example.'; return null;
+    }, function (e) {
+      S.aiNote = e && e.code === 'not_granted' ? 'Live AI was not allowed, so this is the designed example.' : 'Live AI was not available, so this is the designed example.';
+      return null;
+    });
+  }
+
+  /* ---------- step 2 navigation ---------- */
+  function s2next() {
+    var secs = sections(), n = secs.length;
+    if (S.sec === n - 1 && !S.goals.length) {
+      S.s2err = 'Pick at least one, so we know what to teach you.';
+      S.focus = 's2-next'; renderCreator(); return;
+    }
+    S.secDone = Math.max(S.secDone, S.sec + 1); S.s2err = ''; S.ownOpen = false; S.secDir = 'next';
+    if (S.sec < n - 1) { S.sec++; S.anim = 'list'; S.focus = 's2-title'; }
+    else { S.s2done = true; S.at = 3; S.anim = 'step'; S.focus = 'cz-q'; }
+    renderCreator();
+  }
+
+  /* ---------- events ---------- */
+  function onClick(e) {
+    var t = e.target.closest('[data-act]');
+    var a = e.target.closest('a[href^="#"]');
+    if (a) e.preventDefault();
+    if (!t) return;
+    var act = t.dataset.act;
+    if (t.getAttribute('aria-disabled') === 'true') {
+      var need = S.at === 1 ? $('#biz') : $('#lv-0');
+      if (need) { need.focus({ preventScroll: true }); nudge(need.closest('.field') || need.closest('.lvl')); }
+      return;
+    }
+    switch (act) {
+      case 'biz-pick': pick(S.res[+t.dataset.i]); break;
+      case 'biz-custom': pickCustom(); break;
+      case 'biz-clear': var inp = $('#biz'); inp.value = ''; updateBiz(inp); inp.focus(); break;
+      case 'biz-change': S.biz = null; S.q = ''; S.s2done = false; S.sec = 0; S.secDone = 0; S.at = 1; S.anim = 'step'; S.secDir = 'back'; S.focus = 'biz'; renderCreator(); updateSlot(); break;
+      case 'goal': var id = t.dataset.id, i = S.goals.indexOf(id);
+        if (i > -1) S.goals.splice(i, 1); else { S.goals.push(id); t.classList.remove('bump'); void t.offsetWidth; t.classList.add('bump'); }
+        if (S.s2err) { S.s2err = ''; S.popId = i > -1 ? null : id; S.focus = null; renderCreator(); var tb = $('.ch[data-id="' + id + '"]'); if (tb) tb.focus({ preventScroll: true }); } else sync();
+        break;
+      case 'own-open': S.ownOpen = true; S.focus = 'own-goal'; renderCreator(); break;
+      case 'to-lists': S.at = 2; S.sec = 0; S.secDir = 'next'; S.anim = 'step'; S.focus = 's2-title'; renderCreator(); break;
+      case 'lv-back': S.at = 2; S.s2done = false; S.sec = sections().length - 1; S.secDir = 'back'; S.anim = 'step'; S.focus = 's2-title'; renderCreator(); break;
+      case 'own-add': addOwn(); break;
+      case 's2-next': s2next(); break;
+      case 's2-back': S.s2err = ''; S.ownOpen = false; S.secDir = 'back';
+        if (S.sec > 0) { S.sec--; S.anim = 'list'; S.focus = 's2-title'; } else { S.at = 1; S.anim = 'step'; S.focus = 'cz-q'; }
+        renderCreator(); break;
+      case 'level': S.level = +t.dataset.n; sync(); t.classList.remove('bump'); void t.offsetWidth; t.classList.add('bump'); animateProgress();
+        var cb = $('#create'); if (cb && ready()) { cb.removeAttribute('aria-disabled'); cb.classList.remove('go'); void cb.offsetWidth; cb.classList.add('go'); } break;
+      case 'create': startLoading(); break;
+      case 'open-m1': S.phase = 'module'; renderShell(); window.scrollTo(0, 0); break;
+      case 'restart': restart(); break;
+      case 'home': S.phase = 'home'; renderShell(); window.scrollTo(0, 0); break;
+      case 'top': goTop(); break;
+      case 'start': if (S.created) { S.phase = 'module'; renderShell(); window.scrollTo(0, 0); break; }
+        setSticky(false); goTop(); later(function () { var f = $('#biz') || $('#open-m1') || $('#cz-q'); if (f) f.focus({ preventScroll: true }); }, 500); break;
+      case 'jump': var tg = $(t.getAttribute('href')); if (tg) { try { tg.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (er) { tg.scrollIntoView(); } } break;
+      case 'menu': var mn = $('#mnav'); if (mn) { mn.hidden = !mn.hidden; t.setAttribute('aria-expanded', String(!mn.hidden)); } break;
+      case 'soon': toast('Prototype: this page comes later'); break;
+      case 'done1': keepScroll(function () { S.done1 = true; renderShell(); }); toast('Module 1 done. One more step to save it.'); break;
+      case 'google': keepScroll(function () { S.signed = true; renderShell(); }); toast('Prototype: Google sign-in would open here'); break;
+      case 'to-gate': var gt = $('#signup'); if (gt) gt.scrollIntoView({ behavior: 'smooth', block: 'center' }); break;
+      case 'copy': copyPrompt(); break;
+    }
+  }
+  app.addEventListener('click', onClick);
+  app.addEventListener('toggle', function (e) {
+    if (!e.target.open || !e.target.closest || !e.target.closest('.faq')) return;
+    $$('.faq details').forEach(function (d) { if (d !== e.target) d.open = false; });
+  }, true);
+  document.addEventListener('click', function (e) { var mn = $('#mnav'); if (mn && !mn.hidden && !e.target.closest('#mnav') && !e.target.closest('.menu')) { mn.hidden = true; var mb = $('.menu'); if (mb) mb.setAttribute('aria-expanded', 'false'); } });
+  window.addEventListener('resize', function () {
+    clearTimeout(onClick.rt);
+    onClick.rt = setTimeout(function () { if (S.phase !== 'home') return; fitHeadline(); if (S.at !== 2) return; if (cardNarrow() !== S.narrow) renderCreator(); else balanceRows(); }, 150);
+  });
+  sticky.addEventListener('click', onClick);
+  function keepScroll(fn) { var y = window.scrollY; fn(); window.scrollTo(0, y); }
+  function addOwn() {
+    var inp = $('#own-goal'); if (!inp) return;
+    var v = inp.value.trim(); if (!v) { inp.focus(); return; }
+    var id = 'own' + (++nOwn);
+    S.custom[id] = { label: cap(v), desc: 'Added by you', short: cap(v).slice(0, 28), module: cap(v), auto: v.toLowerCase(),
+      steps: ['Describe the problem to AI in two or three sentences, as you would explain it to a friend.', 'Ask for three simple ways to fix it, then pick the easiest one to try this week.', 'Come back with what happened and ask AI to improve the plan.'],
+      prompt: 'I run {name}, {a_cat}{in_town}. I want help with this: ' + v + '. Suggest three simple ways AI could help, starting with the easiest. British English, plain words.' };
+    S.goals.push(id); S.s2err = ''; S.ownOpen = false; S.popId = id;
+    renderCreator();
+    var nb = $('.ch[data-id="' + id + '"]'); if (nb) nb.focus({ preventScroll: true });
+  }
+  function copyPrompt() {
+    var el = $('#prompt-t'); if (!el) return;
+    var txt = el.textContent;
+    function fallback() { var r = document.createRange(); r.selectNodeContents(el); var s = window.getSelection(); s.removeAllRanges(); s.addRange(r); toast('Selected. Press Ctrl+C to copy.'); }
+    try { navigator.clipboard.writeText(txt).then(function () { toast('Prompt copied'); }, fallback); } catch (e) { fallback(); }
+  }
+  app.addEventListener('mousedown', function (e) { if (e.target.closest('.biz-opt, .use-typed')) e.preventDefault(); });
+  app.addEventListener('input', function (e) { if (e.target.classList.contains('biz-input')) updateBiz(e.target); });
+  app.addEventListener('keydown', function (e) {
+    var t = e.target;
+    if (t.classList && t.classList.contains('biz-input')) {
+      var pop = $('.pop', t.closest('.combo'));
+      if (e.key === 'ArrowDown' && S.res.length) { e.preventDefault(); S.hi = Math.min(S.res.length - 1, S.hi + 1); setActive(t); }
+      else if (e.key === 'ArrowUp' && S.res.length) { e.preventDefault(); S.hi = Math.max(0, S.hi - 1); setActive(t); }
+      else if (e.key === 'Enter') { e.preventDefault(); if (S.hi > -1 && S.res[S.hi]) pick(S.res[S.hi]); else if (S.q.trim()) pickCustom(); }
+      else if (e.key === 'Escape') { pop.hidden = true; t.setAttribute('aria-expanded', 'false'); }
+      return;
+    }
+    if (t.id === 'own-goal' && e.key === 'Enter') { e.preventDefault(); addOwn(); }
+    if (t.id === 'own-goal' && e.key === 'Escape') { e.preventDefault(); S.ownOpen = false; renderCreator(); var ob = $('.ch-add'); if (ob) ob.focus({ preventScroll: true }); }
+  });
+  app.addEventListener('focusin', function (e) { if (e.target.classList && e.target.classList.contains('biz-input') && e.target.value.trim()) updateBiz(e.target); });
+  document.addEventListener('pointerdown', function (e) {
+    if (!e.target.closest('.combo')) $$('.combo .pop').forEach(function (p) { if (!p.hidden) { p.hidden = true; var i = $('#biz'); if (i) i.setAttribute('aria-expanded', 'false'); } });
+  });
+
+  /* ---------- prototype controls ---------- */
+  function restart() {
+    cancelTimers();
+    S.phase = 'home'; S.created = false; S.q = ''; S.res = []; S.hi = -1; S.biz = null; S.goals = []; S.custom = {}; S.level = null;
+    S.sec = 0; S.secDone = 0; S.s2done = false; S.s2err = ''; S.done1 = false; S.signed = false; S.aiResult = null; S.aiNote = ''; S.lastPct = 0; S.intro = true;
+    S.at = 1; S.anim = null; S.ownOpen = false;
+    renderShell(); window.scrollTo(0, 0);
+  }
+  function fillExample() {
+    cancelTimers();
+    S.phase = 'home'; S.created = false; S.biz = BIZ[0]; S.q = ''; S.goals = ['quotes', 'followup', 'admin', 'social', 'repeat']; S.level = 2;
+    var n = sections().length; S.sec = n - 1; S.secDone = n; S.s2done = true; S.s2err = ''; S.at = 3; S.anim = null; S.ownOpen = false;
+    S.done1 = false; S.signed = false; S.aiResult = null; S.aiNote = ''; S.morph = true;
+    renderShell(); updateSlot(); window.scrollTo(0, 0);
+  }
+  if ($('.proto')) $('.proto').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-proto]'); if (!b) return;
+    var p = b.dataset.proto;
+    if (p === 'pages') { var pm = $('#pr-menu'); pm.hidden = !pm.hidden; b.setAttribute('aria-expanded', String(!pm.hidden)); e.stopPropagation(); return; }
+    if (p === 'restart') restart();
+    if (p === 'fill') fillExample();
+    if (p === 'phone') {
+      var on = !stage.classList.contains('phone');
+      stage.classList.toggle('phone', on); document.body.classList.toggle('phone', on);
+      b.setAttribute('aria-pressed', String(on));
+      try { localStorage.setItem('cayenne-home-phone', on ? '1' : '0'); } catch (er) {}
+      if (S.phase === 'home') renderCreator();
+      window.scrollTo(0, 0);
+    }
+  });
+  document.addEventListener('click', function (e) { var pm = $('#pr-menu'); if (pm && !pm.hidden && !e.target.closest('#pr-menu') && !e.target.closest('#pr-pages')) { pm.hidden = true; $('#pr-pages').setAttribute('aria-expanded', 'false'); } });
+  if ($('#pr-ai-box')) $('#pr-ai-box').addEventListener('change', function (e) { S.ai = e.target.checked; toast(S.ai ? 'Module 1 will be written by live AI' : 'Module 1 will use the designed example'); });
+
+  /* ---------- start ---------- */
+
+  renderShell();
+  try { var pre = new URLSearchParams(location.search).get('biz'); var bi = $('#biz'); if (pre && bi) { bi.value = pre.slice(0, 80); updateBiz(bi); } } catch (e) {}
+  if (window.claude && typeof window.claude.use === 'function') {
+    window.claude.use('sample').then(function (fn) { if (fn) { sampleFn = fn; if ($('#pr-ai')) $('#pr-ai').hidden = false; } }, function () {});
+  }
+})();
+</script>

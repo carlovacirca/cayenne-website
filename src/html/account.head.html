@@ -1,0 +1,203 @@
+<meta name="robots" content="noindex"><style>
+/* ---------- app bar: logo, the course, a slim progress line, the avatar ---------- */
+.appbar-in{gap:20px}
+.ab-course{display:flex;flex-direction:column;min-width:0;padding-left:20px;border-left:1px solid var(--line);line-height:1.25}
+.ab-course span{font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--mut)}
+.ab-course b{font-size:15.5px;font-weight:650;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ab-prog{margin-left:auto;display:flex;align-items:center;gap:12px;min-height:44px;padding:0 6px;border-radius:12px;font-size:14px;font-weight:600;color:var(--ink2);white-space:nowrap;text-decoration:none;font-variant-numeric:tabular-nums}
+.ab-prog:hover{color:var(--ink)}
+.ab-segs{display:flex;gap:3px}
+.ab-segs i{position:relative;width:18px;height:5px;border-radius:3px;background:var(--line);overflow:hidden}
+.ab-segs i.d{background:linear-gradient(90deg,var(--red),#FF6A3D)}
+.ab-me{flex:none;display:flex;align-items:center;border-radius:50%;text-decoration:none}
+.ab-me .avatar{box-shadow:0 0 0 2px #FFFFFF,0 0 0 3.5px var(--red)}
+
+/* ---------- the page ---------- */
+.ac{position:relative;overflow:clip}
+.ac .heat .h1{width:760px;height:620px;left:calc(50% - 760px);top:-4%;background:radial-gradient(closest-side,var(--heat1),rgba(255,92,56,0));animation:drift1 24s ease-in-out infinite alternate}
+.ac .heat .h2{width:720px;height:600px;left:calc(50% + 40px);top:-10%;background:radial-gradient(closest-side,var(--heat2),rgba(255,170,80,0));animation:drift2 28s ease-in-out infinite alternate}
+.ac .heat .h3{width:640px;height:520px;left:calc(50% - 320px);top:46%;background:radial-gradient(closest-side,var(--heat3),rgba(255,110,140,0))}
+.ac-head{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;text-align:center;padding-block:clamp(28px,6svh,64px) clamp(26px,4.6svh,44px)}
+.back{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 18px 0 14px;border-radius:999px;background:rgba(255,255,255,.86);border:1px solid var(--line);box-shadow:0 8px 22px -14px rgba(60,20,10,.3);font-size:15px;font-weight:600;color:var(--ink2);text-decoration:none;transition:border-color .15s,color .15s}
+.back:hover{border-color:var(--line2);color:var(--ink)}
+.back svg{transform:scaleX(-1)}
+.ac-head .hero-h{max-width:none}
+.ac-head .lede{max-width:32em;text-wrap:balance}
+.ac-grid{position:relative;z-index:1;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;max-width:1040px;margin:0 auto;padding-bottom:clamp(48px,8svh,88px)}
+
+/* a settings card: icon, title and a short line, then the body */
+.set{display:flex;flex-direction:column;padding:24px 26px 26px;scroll-margin-top:120px}
+.set.wide{grid-column:1 / -1}
+.set-h{display:flex;align-items:center;gap:14px;padding-bottom:18px;margin-bottom:20px;border-bottom:1px solid var(--line)}
+.set-ic{flex:none;width:46px;height:46px;border-radius:14px;background:#FFF1EE;color:var(--red);display:grid;place-items:center}
+.set-h > div{min-width:0}
+.set-h h2{margin:0;font-size:20px;font-weight:650;line-height:1.25;letter-spacing:-.015em;color:var(--ink)}
+.set-h p{margin:3px 0 0;font-size:15px;line-height:1.4;color:var(--mut)}
+.set-h .r{margin-left:auto;flex:none}
+.gtag{display:inline-flex;align-items:center;gap:7px;height:32px;padding:0 12px 0 9px;border-radius:999px;background:#FFFFFF;border:1px solid var(--line);font-size:13.5px;font-weight:600;color:var(--ink2)}
+.set-note{margin:auto 0 0;padding-top:16px;text-wrap:pretty;font-size:14.5px;line-height:1.5;color:var(--mut)}
+.set-note a{color:var(--ink);font-weight:600;text-underline-offset:3px}
+
+/* small fully rounded controls inside the cards (settings, not page actions) */
+.pbtn{flex:none;display:inline-flex;align-items:center;justify-content:center;gap:8px;height:46px;padding:0 18px;border-radius:999px;border:1.5px solid var(--line2);background:#FFFFFF;font-size:15px;font-weight:600;color:var(--ink);text-decoration:none;white-space:nowrap;transition:border-color .15s,background .15s,color .15s}
+.pbtn:hover{border-color:var(--ink)}
+.pbtn.danger{border-color:rgba(196,15,11,.45);color:var(--red)}
+.pbtn.danger:hover{border-color:var(--red);background:#FFF6F4}
+.pbtn.danger.solid{background:var(--red);border-color:var(--red);color:#FFFFFF}
+.pbtn.danger.solid:hover{background:var(--red-h);border-color:var(--red-h)}
+.app .pbtn:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+
+/* your details */
+.me{display:flex;align-items:center;gap:16px}
+.avatar.lg{width:60px;height:60px;font-size:21px;letter-spacing:.01em;background:linear-gradient(140deg,#3A2C27,#17110F);box-shadow:0 0 0 3px #FFFFFF,0 0 0 4.5px var(--line2),0 14px 26px -14px rgba(23,17,15,.7)}
+.me b{display:block;font-size:19px;font-weight:650;letter-spacing:-.01em;color:var(--ink)}
+.me > div span{display:block;margin-top:2px;font-size:15.5px;color:var(--ink2);overflow-wrap:anywhere}
+.rows{margin:18px 0 0;padding:0}
+.rows > div{display:flex;justify-content:space-between;align-items:center;gap:16px;min-height:46px;padding:8px 0;border-top:1px solid var(--line);font-size:15.5px}
+.rows dt{color:var(--mut)}
+.rows dd{margin:0;display:inline-flex;align-items:center;gap:8px;text-align:right;font-weight:600;color:var(--ink)}
+
+/* your business */
+.set .bizcard{animation:none;padding:12px 12px 12px 12px;border-radius:20px}
+.set .bc-map{width:56px;height:56px}
+.set .bizcard .tag{flex:none;margin-left:auto;margin-right:4px}
+
+/* your course: AI level and goals */
+.crs{display:flex;flex-direction:column}
+.crs-row{display:grid;grid-template-columns:minmax(0,250px) minmax(0,1fr);gap:16px 40px;align-items:start;padding:4px 0 22px}
+.crs-row + .crs-row{padding-top:22px;border-top:1px solid var(--line)}
+.crs-row > div{min-width:0}
+.lb{display:block;font-size:16.5px;font-weight:650;color:var(--ink)}
+.lb-h{display:block;margin-top:4px;font-size:14.5px;line-height:1.45;color:var(--mut);text-wrap:balance}
+.crs .lv-wrap{display:flex;width:max-content;max-width:100%}
+.crs .lvl{justify-content:flex-start}
+.crs .lv-desc{margin-top:14px;text-align:left;text-wrap:pretty}
+.crs .crow{justify-content:flex-start}
+.crs .ch[aria-checked="true"]:hover{box-shadow:0 10px 20px -14px rgba(20,110,60,.6)}
+.crs .set-note{margin:0;padding:16px 0 0;border-top:1px solid var(--line)}
+
+/* emails: switches. Green means on. */
+.tg{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.tg li{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:12px 0}
+.tg li + li{border-top:1px solid var(--line)}
+.tg b{display:block;font-size:16.5px;font-weight:600;color:var(--ink)}
+.tg small{display:block;margin-top:2px;font-size:14.5px;color:var(--mut)}
+.sw{position:relative;flex:none;width:56px;height:34px;padding:0;border-radius:999px;border:0;background:#DCD3CD;transition:background .25s}
+.sw i{position:absolute;left:4px;top:4px;width:26px;height:26px;border-radius:50%;background:#FFFFFF;box-shadow:0 2px 5px rgba(23,17,15,.25);transition:transform .3s cubic-bezier(.2,.75,.25,1)}
+.sw[aria-checked="true"]{background:var(--go)}
+.sw[aria-checked="true"] i{transform:translateX(22px)}
+.sw::after{content:"";position:absolute;inset:-6px}
+.app .sw:focus-visible{outline:3px solid var(--ink);outline-offset:3px}
+
+/* your data */
+.data p{margin:0;font-size:16px;line-height:1.55;color:var(--ink2)}
+.keep{list-style:none;margin:14px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:6px}
+.keep li{display:inline-flex;align-items:center;height:30px;padding:0 12px;border-radius:999px;background:var(--soft);border:1px solid var(--line);font-size:13.5px;font-weight:600;color:var(--ink2)}
+/* download and delete are quiet settings rows, not more buttons */
+.drows{list-style:none;margin:auto 0 0;padding:16px 0 0;display:flex;flex-direction:column}
+.drows[hidden]{display:none}
+.drows li{border-top:1px solid var(--line);padding-top:4px}
+.drows li + li{margin-top:4px}
+.drow{width:100%;display:flex;align-items:center;gap:14px;min-height:62px;padding:8px 10px 8px 6px;border:0;border-radius:16px;background:transparent;text-align:left;color:var(--ink);transition:background .15s}
+.drow:hover{background:var(--soft)}
+.dr-ic{flex:none;width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:var(--soft);border:1px solid var(--line);color:var(--ink2)}
+.drow.del .dr-ic{background:#FFF1EE;border-color:transparent;color:var(--red)}
+.dr-t{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.dr-t b{font-size:16.5px;font-weight:600;color:var(--ink)}
+.drow.del .dr-t b{color:var(--red)}
+.dr-t small{font-size:14.5px;color:var(--mut)}
+.dr-go{flex:none;color:var(--mut);transition:transform .2s}
+.drow:hover .dr-go{transform:translateX(2px);color:var(--ink)}
+.app .drow:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+.dact{display:flex;flex-wrap:wrap;gap:10px;margin-top:auto;padding-top:20px}
+.dact[hidden]{display:none}
+.confirm{margin-top:16px;padding:16px 18px;border-radius:18px;background:#FFF6F4;border:1px solid #F3D3CD;animation:settle .3s ease-out}
+.confirm[hidden]{display:none}
+.confirm b{display:block;font-size:16.5px;color:var(--ink)}
+.confirm p{margin:4px 0 0;font-size:15px;line-height:1.5;color:var(--ink2)}
+.confirm .dact{padding-top:14px}
+
+/* sign out */
+.out{flex-direction:row;align-items:center;gap:16px;padding:18px 22px}
+.out .avatar{width:44px;height:44px}
+.out > div{flex:1;min-width:0}
+.out b{display:block;font-size:16.5px;font-weight:650;color:var(--ink)}
+.out span.m{display:block;margin-top:2px;font-size:14.5px;color:var(--mut);overflow-wrap:anywhere}
+
+.ac-base{position:relative;z-index:1;border-top:1px solid var(--line)}
+.ac-base .foot-base{border-top:0;align-items:center}
+.ac-base a{color:var(--ink2);text-decoration:none}
+.ac-base a:hover{color:var(--ink);text-decoration:underline;text-underline-offset:3px}
+.ac-base nav a{display:inline-flex;align-items:center;min-height:32px}
+
+@container app (min-width:861px) and (max-width:1060px){
+  .crs-row{grid-template-columns:minmax(0,200px) minmax(0,1fr);gap:16px 28px}
+}
+@media (max-height:800px){
+  @container app (min-width:861px){
+    .ac-head{padding-block:28px 28px}
+    .ac-head .hero-h{margin-top:16px;font-size:clamp(38px,min(5.6cqi,7.6svh),76px)}
+  }
+}
+
+/* ---------- phone ---------- */
+@container app (max-width:860px){
+  .appbar-in{gap:12px}
+  .ab-course{display:none}
+  .ab-prog{gap:8px;font-size:13.5px}
+  .ab-segs{gap:2px}
+  .ab-segs i{width:11px;height:4px}
+  .ab-me .avatar{width:38px;height:38px;font-size:14px}
+  .ac .heat .h1{left:-380px;top:2%}.ac .heat .h2{left:-60px;top:-4%}.ac .heat .h3{left:-200px;top:30%}
+  .ac-head{padding-block:22px 22px}
+  .back{min-height:44px;font-size:14.5px}
+  .ac-head .hero-h{margin-top:16px;font-size:clamp(34px,4.8svh,40px)}
+  .ac-head .lede{font-size:16.5px;line-height:1.5}
+  .ac-grid{grid-template-columns:minmax(0,1fr);gap:14px;padding-bottom:36px}
+  .set{padding:18px 16px 18px;border-radius:22px}
+  .set-h{gap:12px;padding-bottom:14px;margin-bottom:16px}
+  .set-ic{width:42px;height:42px;border-radius:12px}
+  .set-h h2{font-size:18.5px}
+  .set-h p{font-size:14.5px}
+  .gtag{height:30px;padding:0 10px 0 8px;font-size:13px}
+  .gtag .gt{display:none}
+  .me{gap:14px}
+  .avatar.lg{width:54px;height:54px;font-size:19px}
+  .me b{font-size:18px}
+  .me > div span{font-size:15px}
+  .rows > div{font-size:15px}
+  .set .bizcard{flex-wrap:nowrap}
+  .set .bc-map{width:48px;height:48px}
+  .set .bc-main{flex:1 1 auto}
+  .set .bizcard .tag{display:none}
+  .set-h .pbtn{height:44px;padding:0 16px}
+  .crs-row{grid-template-columns:minmax(0,1fr);gap:14px;padding-bottom:18px}
+  .crs-row + .crs-row{padding-top:18px}
+  .lb{font-size:16px}
+  .lb-h{font-size:14px}
+  .crs .lv-wrap{width:100%}
+  .crs .lvl{justify-content:space-between}
+  .crs .crow{gap:8px}
+  .tg li{gap:14px}
+  .tg b{font-size:16px}
+  .tg small{font-size:14px}
+  .dact{flex-direction:column}
+  .dact .pbtn{width:100%;height:50px}
+  .out{flex-wrap:wrap;padding:16px}
+  .out .pbtn{width:100%;height:50px}
+  .ac-base .foot-base{padding-block:12px 18px;font-size:13px}
+}
+@container app (max-width:420px){
+  .ac-base .mk{display:none}
+}
+@container app (max-width:380px){
+  .ab-prog > span:first-child{display:none}
+  .set .bc-sub{font-size:14px}
+}
+@media (max-height:700px){
+  @container app (max-width:860px){
+    .ac-head{padding-block:16px 18px}
+    .ac-head .hero-h{margin-top:12px;font-size:32px}
+  }
+}
+</style>

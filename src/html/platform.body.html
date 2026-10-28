@@ -1,0 +1,234 @@
+
+<div id="stage"><div id="app" class="app">
+
+  <!-- 1 · hero -->
+  <section class="snap hero pf intro" id="top">
+    <div class="heat" aria-hidden="true"><i class="h1"></i><i class="h2"></i><i class="h3"></i></div>
+    <header class="nav"><div class="nav-in wrap"><a class="brand" href="index.html" aria-label="Cayenne home"><img src="img/cayenne.png" alt="Cayenne" width="128" height="36"></a>
+    <nav class="links" aria-label="Main"><a href="course.html">Course</a><a href="audit.html">Free AI audit</a><a href="services.html">Services</a><a href="about.html">About</a></nav>
+    <a class="signin" href="signin.html">Sign in</a><button type="button" class="menu" aria-label="Menu"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h16M4 16h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button></div></header>
+
+    <div class="hero-main wrap x-main">
+      <div class="x-copy">
+        <span class="soon in"><i aria-hidden="true"></i>Build on Cayenne<b>Coming soon</b></span>
+        <h1 class="hero-h in d1">Build your own <em>AI helpers.</em> No code.</h1>
+        <p class="lede in d2">Pick a helper, connect your email and calendar, and <span class="nw">switch it on.</span> It checks with you before anything goes out.</p>
+
+        <form class="card wl in d3" id="wl" novalidate data-done="Prototype: nothing was sent">
+          <div class="card-in" id="wl-in">
+            <div class="wl-head"><span class="wl-ic i-red" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24"><path d="M12 3.5l1.9 5.1 5.1 1.9-5.1 1.9L12 17.5l-1.9-5.1L5 10.5l5.1-1.9z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/><path d="M18.5 15.5l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z" fill="currentColor"/></svg></span><span><b>Get early access</b><small>One email when it opens. Nothing else.</small></span></div>
+            <div class="wl-row">
+              <label class="wl-f"><span class="sr">Your email address</span><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3" fill="none" stroke="currentColor" stroke-width="1.9"/><path d="M4 7.5l8 5.5 8-5.5" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg><input id="wl-email" name="email" type="email" inputmode="email" autocomplete="email" placeholder="you@yourbusiness.co.uk" required></label>
+              <button type="submit" class="btn-create">Join the waitlist <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+            </div>
+          </div>
+        </form>
+        <p class="alt in d4">Rather have one built for you now? <a href="automations.html">See automations</a></p>
+      </div>
+
+      <div class="x-vis in d2">
+        <figure class="bd" role="img" aria-label="Example helper in the builder. Step 1: when an enquiry arrives. Step 2: AI writes a reply in your style. Step 3: send it after you approve.">
+          <div aria-hidden="true">
+            <div class="bd-bar">
+              <span class="bd-crumb"><span class="p">My helpers</span><svg width="14" height="14" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg><b>Enquiry replier</b></span>
+              <span class="tag">Example</span>
+              <span class="bd-on">On<span class="tg"></span></span>
+            </div>
+            <div class="bd-cv">
+              <div class="bd-flow">
+                <span class="bd-line"></span>
+                <div class="nd n1">
+                  <span class="nd-ic i-red"><svg width="22" height="22" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3" fill="none" stroke="currentColor" stroke-width="1.9"/><path d="M4 7.5l8 5.5 8-5.5" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                  <small>Step 1 · When</small>
+                  <b><span class="l">When an enquiry arrives</span><span class="s">Enquiry arrives</span></b>
+                  <span class="nd-m">Email or website</span>
+                </div>
+                <div class="nd n2 ai">
+                  <span class="nd-ic"><svg width="22" height="22" viewBox="0 0 24 24"><path d="M12 3.5l1.9 5.1 5.1 1.9-5.1 1.9L12 17.5l-1.9-5.1L5 10.5l5.1-1.9z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/><path d="M18.5 15.5l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z" fill="currentColor"/></svg></span>
+                  <small>Step 2 · AI</small>
+                  <b><span class="l">AI writes a reply in your style</span><span class="s">AI writes a reply</span></b>
+                  <span class="nd-m">Your style</span>
+                  <div class="nd-x"><p class="nd-q">Hi Sarah, thanks for getting in touch about your kitchen. I can come and measure up on Thursday at 10. Does that suit? Tom, Harper &amp; Sons</p></div>
+                </div>
+                <div class="nd n3">
+                  <span class="nd-ic i-red"><svg width="22" height="22" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5" fill="none" stroke="currentColor" stroke-width="1.9"/><path d="M3 20c.6-3.6 3-5.5 6-5.5s5.4 1.9 6 5.5M15.5 11.5l2 2 4-4" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                  <small>Step 3 · Then</small>
+                  <b><span class="l">Send it after you approve</span><span class="s">You approve</span></b>
+                  <div class="nd-x nd-acts"><span class="mini ink"><svg width="14" height="14" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>Approve and send</span><span class="mini out">Edit first</span></div>
+                </div>
+              </div>
+              <div class="bd-foot"><span><svg width="15" height="15" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>Saved · 3 steps</span><span class="bd-zoom"><i><svg width="10" height="10" viewBox="0 0 24 24"><path d="M5 12h14" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg></i>100%<i><svg width="10" height="10" viewBox="0 0 24 24"><path d="M5 12h14M12 5v14" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg></i></span></div>
+            </div>
+          </div>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2 · what you can build -->
+  <section class="snap sec pf-hp pf-st" id="helpers" data-sticky>
+    <div class="heat" aria-hidden="true"><i class="h1"></i></div>
+    <div class="wrap center">
+      <span class="sec-k"><i aria-hidden="true"></i>What you can build</span>
+      <h2 class="sec-h">Six helpers, <em>ready to go.</em></h2>
+      <p class="sec-sub">Start from one of these and change the words to suit you. Each one takes care of a job you do every week.</p>
+      <ul class="hp-grid">
+        <li><div class="hp"><div class="hp-top"><span class="hp-ic i-red" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v7a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 3.5V16H6.5A2.5 2.5 0 0 1 4 13.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M8 8.5h8M8 11.5h5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span><h3>Enquiry replier</h3></div><p class="hp-p">Answers new enquiries in your style, so nobody waits for a reply.</p><p class="hp-s">Replies to new enquiries in your style.</p><div class="hp-fl"><span><i></i>New enquiry</span><svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/></svg><span><i></i>Reply drafted</span></div></div></li>
+        <li><div class="hp"><div class="hp-top"><span class="hp-ic i-red" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 3.5h7l4.5 4.5v11a1.5 1.5 0 0 1-1.5 1.5H7A1.5 1.5 0 0 1 5.5 19V5A1.5 1.5 0 0 1 7 3.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M14 3.5V8h4.5M9 12.5h6M9 16h4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><h3>Quote writer</h3></div><p class="hp-p">Turns your notes from a visit into a clear, tidy quote to check and send.</p><p class="hp-s">Turns visit notes into a tidy quote.</p><div class="hp-fl"><span><i></i>Visit notes</span><svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/></svg><span><i></i>Quote ready</span></div></div></li>
+        <li><div class="hp"><div class="hp-top"><span class="hp-ic i-red" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 3.8l2.5 5.1 5.6.8-4 3.9.9 5.6-5-2.6-5 2.6.9-5.6-4-3.9 5.6-.8z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></span><h3>Review requester</h3></div><p class="hp-p">Asks happy customers for a Google review a day after the job is done.</p><p class="hp-s">Asks happy customers for a review.</p><div class="hp-fl"><span><i></i>Job done</span><svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/></svg><span><i></i>Review asked</span></div></div></li>
+        <li><div class="hp"><div class="hp-top"><span class="hp-ic i-red" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M6 3.5h12v17l-3-2-3 2-3-2-3 2z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 8.5h6M9 12h6M9 15.5h3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span><h3>Invoice chaser</h3></div><p class="hp-p">Sends a polite reminder when an invoice is late, then a firmer one a week on.</p><p class="hp-s">Chases late invoices, politely.</p><div class="hp-fl"><span><i></i>Invoice late</span><svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/></svg><span><i></i>Reminder sent</span></div></div></li>
+        <li><div class="hp"><div class="hp-top"><span class="hp-ic i-red" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="3" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3.5 10h17M8 3v4M16 3v4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="8.5" cy="14.5" r="1.2" fill="currentColor"/><circle cx="12" cy="14.5" r="1.2" fill="currentColor"/><circle cx="15.5" cy="14.5" r="1.2" fill="currentColor"/></svg></span><h3>Social post planner</h3></div><p class="hp-p">Plans a month of posts from your photos and recent jobs, ready to approve.</p><p class="hp-s">Plans a month of posts for you.</p><div class="hp-fl"><span><i></i>Your photos</span><svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/></svg><span><i></i>Posts planned</span></div></div></li>
+        <li><div class="hp"><div class="hp-top"><span class="hp-ic i-red" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 6.5C10 5 7.5 4.5 4 4.5v13c3.5 0 6 .5 8 2 2-1.5 4.5-2 8-2v-13c-3.5 0-6 .5-8 2zM12 6.5v13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></span><h3>Staff guide maker</h3></div><p class="hp-p">Turns the way you do things into a simple guide for new staff.</p><p class="hp-s">Writes simple guides for new staff.</p><div class="hp-fl"><span><i></i>Your notes</span><svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/></svg><span><i></i>Guide written</span></div></div></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 3 · how it works -->
+  <section class="snap sec pf-how pf-st reveal" id="how" data-sticky>
+    <div class="heat" aria-hidden="true"><i class="h1"></i></div>
+    <div class="wrap center">
+      <span class="sec-k"><i aria-hidden="true"></i>How it works</span>
+      <h2 class="sec-h">Three steps, <em>then it just runs.</em></h2>
+      <p class="sec-sub">No code and no fiddly settings. If you can fill in a form, you can build a helper.</p>
+      <ol class="hw">
+        <li><div class="hw-c">
+          <div class="hw-v" aria-hidden="true"><div class="mk mk-pk">
+            <span class="on"><i><svg width="14" height="14" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg></i>Enquiry replier<em>Picked</em></span>
+            <span><i><svg width="14" height="14" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg></i>Quote writer</span>
+            <span><i><svg width="14" height="14" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg></i>Invoice chaser</span>
+          </div></div>
+          <div class="hw-b"><span class="hw-n">1</span><h3>Pick a helper</h3><p>Start from one of the six, or describe your own in a sentence.</p>
+            <span class="hw-w" aria-hidden="true"><span class="ok"><svg width="15" height="15" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span></div>
+        </div></li>
+        <li><div class="hw-c">
+          <div class="hw-v" aria-hidden="true"><div class="mk mk-cn">
+            <span><i><svg width="16" height="16" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M4 7.5l8 5.5 8-5.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></i><b>Email</b><span class="tag ok">Connected</span></span>
+            <span><i><svg width="16" height="16" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3.5 10h17M8 3v4M16 3v4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></i><b>Calendar</b><span class="tag ok">Connected</span></span>
+            <span><i><svg width="16" height="16" viewBox="0 0 24 24"><rect x="5" y="3.5" width="14" height="17" rx="2.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8.5 8h7M8.5 12h1.5M14 12h1.5M8.5 16h1.5M14 16h1.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></i><b>Accounts</b><span class="cnx">Connect</span></span>
+          </div></div>
+          <div class="hw-b"><span class="hw-n">2</span><h3>Connect your tools</h3><p>Link your email, calendar and accounts. You choose what it can see.</p>
+            <span class="hw-w" aria-hidden="true"><span class="stk"><i><svg width="13" height="13" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M4 7.5l8 5.5 8-5.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></i><i><svg width="13" height="13" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="3" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M3.5 10h17" fill="none" stroke="currentColor" stroke-width="2.2"/></svg></i><i><svg width="13" height="13" viewBox="0 0 24 24"><rect x="5" y="3.5" width="14" height="17" rx="2.5" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M8.5 8h7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></i></span></span></div>
+        </div></li>
+        <li><div class="hw-c">
+          <div class="hw-v" aria-hidden="true"><div class="mk mk-on">
+            <div class="h"><i class="i-red"><svg width="18" height="18" viewBox="0 0 24 24"><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v7a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 3.5V16H6.5A2.5 2.5 0 0 1 4 13.5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg></i><span class="tx"><b>Enquiry replier</b><small>Asks you before it sends</small></span><span class="tg"></span></div>
+            <div class="mk-st">On · waiting for the next enquiry</div>
+          </div></div>
+          <div class="hw-b"><span class="hw-n">3</span><h3>Switch it on</h3><p>It works in the background and checks with you before anything goes out.</p>
+            <span class="hw-w" aria-hidden="true"><span class="tg"></span></span></div>
+        </div></li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- 4 · plans -->
+  <section class="snap sec pf-pl" id="plans">
+    <div class="heat" aria-hidden="true"><i class="h1"></i><i class="h2"></i></div>
+    <div class="wrap center">
+      <span class="sec-k"><i aria-hidden="true"></i>Plans</span>
+      <h2 class="sec-h">Build alone, or with <em>a hand from us.</em></h2>
+      <p class="sec-sub">Every plan has the builder and all six helpers. The bigger plans add time with a real person.</p>
+      <ul class="pl-grid">
+        <li><div class="pl">
+          <span class="pl-k">Do it yourself</span>
+          <h3>Starter</h3>
+          <p class="pl-d">Build and run helpers on your own.</p>
+          <div class="pl-p"><b>Price at launch</b><span>Monthly</span></div>
+          <div class="pl-call"><i aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3" fill="none" stroke="currentColor" stroke-width="1.9"/><path d="M4 7.5l8 5.5 8-5.5" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg></i><div><b>Help by email</b><small>No calls included</small></div><span class="wk" aria-hidden="true"><i></i><i></i><i></i><i></i></span></div>
+          <ul>
+            <li><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>The helper builder</li>
+            <li><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>All six ready-made helpers</li>
+            <li><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>Short video guides</li>
+            <li><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>You approve every message</li>
+          </ul>
+        </div></li>
+        <li><div class="pl on">
+          <span class="pl-k">Monthly call</span>
+          <h3>Plus</h3>
+          <p class="pl-d">With a check-in call each month.</p>
+          <div class="pl-p"><b>Price at launch</b><span>Monthly</span></div>
+          <div class="pl-call"><i aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24"><rect x="3" y="6" width="13" height="12" rx="3" fill="none" stroke="currentColor" stroke-width="1.9"/><path d="M16 10.5l5-3v9l-5-3" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/></svg></i><div><b>A 30 minute call</b><small>Each month</small></div><span class="wk" aria-hidden="true"><i class="c"></i><i></i><i></i><i></i></span></div>
+          <ul>
+            <li><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>Everything in Starter</li>
+            <li><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>A 30 minute call each month</li>
+            <li><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>We check your helpers with you</li>
+            <li><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>Ideas for your next helper</li>
+          </ul>
+        </div></li>
+        <li><div class="pl on">
+          <span class="pl-k">Weekly call</span>
+          <h3>Premium</h3>
+          <p class="pl-d">With us beside you every week.</p>
+          <div class="pl-p"><b>Price at launch</b><span>Monthly</span></div>
+          <div class="pl-call"><i aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24"><rect x="3" y="6" width="13" height="12" rx="3" fill="none" stroke="currentColor" stroke-width="1.9"/><path d="M16 10.5l5-3v9l-5-3" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/></svg></i><div><b>A 30 minute call</b><small>Every week</small></div><span class="wk" aria-hidden="true"><i class="c"></i><i class="c"></i><i class="c"></i><i class="c"></i></span></div>
+          <ul>
+            <li><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>Everything in Starter</li>
+            <li><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>A 30 minute call every week</li>
+            <li><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>We build new helpers with you</li>
+            <li><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>First to try new helpers</li>
+          </ul>
+        </div></li>
+      </ul>
+      <div class="pl-cta"><a class="btn-create" href="#top" data-wl>Join the waitlist <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/></svg></a></div>
+    </div>
+  </section>
+
+  <!-- 5 · questions and footer -->
+  <section class="snap sec s-why pf-q" id="questions">
+    <div class="heat" aria-hidden="true"><i class="h1"></i></div>
+    <div class="why"><div class="wrap why-grid">
+      <div class="q-head">
+        <span class="sec-k"><i aria-hidden="true"></i>Questions</span>
+        <h2 class="sec-h">Before you <em>join the list.</em></h2>
+        <p class="sec-sub">The short answers. Anything else, just ask us when it opens.</p>
+      </div>
+      <div class="cta-row q-cta"><a class="btn-create" href="#top" data-wl>Join the waitlist <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/></svg></a><span class="note">One email when it opens</span></div>
+      <div class="faq">
+        <details><summary>When does it open?<span class="fq-ic" aria-hidden="true"></span></summary><div class="fq-a"><p>We are building it now. Join the waitlist and you get one email the day it opens.</p></div></details>
+        <details><summary>Will it send things without me?<span class="fq-ic" aria-hidden="true"></span></summary><div class="fq-a"><p>Only if you let it. Every helper starts by asking you before each message goes out.</p></div></details>
+        <details><summary>Is my business data safe?<span class="fq-ic" aria-hidden="true"></span></summary><div class="fq-a"><p>Helpers only see the tools you connect, and we never sell or share your data.</p></div></details>
+        <details><summary>Do I need to know how to code?<span class="fq-ic" aria-hidden="true"></span></summary><div class="fq-a"><p>No. You pick a helper, answer a few questions in plain English and switch it on.</p></div></details>
+        <details><summary>Can you build a helper for me instead?<span class="fq-ic" aria-hidden="true"></span></summary><div class="fq-a"><p>Yes, today. That is what our <a href="automations.html">automations</a> service is for.</p></div></details>
+      </div>
+    </div></div>
+    <footer class="foot"><div class="wrap"><div class="foot-in"><div class="foot-brand"><img src="img/cayenne.png" alt="Cayenne"><p>Plain-English AI for UK businesses. Learn it, plan it or have it built.</p></div>
+    <div><h4>Cayenne</h4><ul><li><a href="course.html">The free course</a></li><li><a href="audit.html">Free AI audit</a></li><li><a href="services.html">Services</a></li><li><a href="guides.html">Guides</a></li></ul></div>
+    <div><h4>Company</h4><ul><li><a href="about.html">About</a></li><li><a href="partners.html">Partners</a></li><li><a href="contact.html">Contact</a></li><li><a href="signin.html">Sign in</a></li></ul></div></div>
+    <div class="foot-base"><span>© 2026 Cayenne. Made in the UK.</span><nav aria-label="Legal"><a href="legal.html#privacy">Privacy</a><a href="legal.html#cookies">Cookies</a><a href="legal.html#terms">Terms</a></nav></div></div></footer>
+  </section>
+
+</div></div>
+<div class="sticky" id="sticky" inert><span class="tx"><span class="trio" aria-hidden="true"><span><img src="img/openai.png" alt=""></span><span><img src="img/claude.png" alt=""></span><span><img src="img/gemini.png" alt=""></span></span>Your free AI course, built around your business</span><a class="btn-create" href="index.html#top">Start the free course</a></div>
+<div class="toast" id="toast" role="status" hidden></div>
+<script src="site.js"></script>
+<script>
+/* this page only: the waitlist card and the buttons that lead back to it */
+(function () {
+  'use strict';
+  var form = document.getElementById('wl'), input = document.getElementById('wl-email');
+  var RM = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  var esc = function (s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
+  /* a quiet shake and the browser's own message when the email does not look right */
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    if (!input.checkValidity() || !input.value.trim()) {
+      e.stopPropagation();
+      var row = form.querySelector('.wl-row');
+      row.classList.remove('nudge'); void row.offsetWidth; row.classList.add('nudge');
+      input.focus(); input.reportValidity();
+      return;
+    }
+    var row2 = form.querySelector('.wl-row');
+    row2.outerHTML = '<div class="wl-ok" role="status"><span aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>You are on the list</b><small>We will email ' + esc(input.value.trim()) + ' when it opens.</small></div></div>';
+  });
+  /* "Join the waitlist" further down the page brings you back up to the card and puts you in the email box */
+  document.querySelectorAll('[data-wl]').forEach(function (a) {
+    a.addEventListener('click', function (e) {
+      e.preventDefault();
+      document.getElementById('top').scrollIntoView({ behavior: RM ? 'auto' : 'smooth' });
+      var f = document.getElementById('wl-email');
+      if (f) setTimeout(function () { f.focus({ preventScroll: true }); }, RM ? 0 : 650);
+    });
+  });
+})();
+</script>
