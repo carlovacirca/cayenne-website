@@ -4,7 +4,7 @@ import { env } from 'cloudflare:workers';
 export type Env = {
   ANTHROPIC_API_KEY?: string; GOOGLE_PLACES_KEY?: string; GOOGLE_CLIENT_ID?: string; GOOGLE_CLIENT_SECRET?: string;
   SESSION_SECRET?: string; RESEND_API_KEY?: string; MAIL_FROM?: string; MAIL_TO?: string; DATA?: KVNamespace;
-  INSIGHTS_APPROVER?: string; SITE_URL?: string;
+  INSIGHTS_APPROVER?: string; INSIGHTS_AUTO_PUBLISH?: string; SITE_URL?: string;
 };
 export const E = env as unknown as Env;
 

@@ -1,0 +1,12 @@
+---
+/* The daily briefing: the latest published edition, or a holding screen before the first one */
+import Base from '../layouts/Base.astro';
+import guideHead from '../html/guide.head.html?raw';
+import insHead from '../html/insights.head.html?raw';
+import { getIndex, getEdition, editionBody, emptyBody } from '../lib/insights';
+export const prerender = false;
+const idx = await getIndex();
+const ed = idx[0] ? await getEdition(idx[0].date) : null;
+Astro.response.headers.set('cache-control', 'public, max-age=300');
+---
+<Base title="Insights: AI and business news, daily · Cayenne" description="The big AI and business stories and the quiet ones from around the world, every morning, in plain English, with what each means for a UK business." page="insights.html" head={guideHead + insHead} body={ed ? editionBody(ed, { archive: idx, latest: true }) : emptyBody()} />

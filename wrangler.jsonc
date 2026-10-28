@@ -1,0 +1,12 @@
+{
+  // Cloudflare Worker settings. Secrets (API keys) go in the Cloudflare dashboard, never in this file.
+  "name": "cayenne-website",
+  "main": "./src/worker.ts",
+  "compatibility_date": "2026-10-19",
+  "observability": { "enabled": true },
+  // DATA keeps form copies, course progress, rate limits and the Insights editions.
+  // Cloudflare creates the namespace on the first deploy.
+  "kv_namespaces": [{ "binding": "DATA" }],
+  // the Insights draft is written at 05:00 UTC: 5am in winter, 6am in summer, UK time
+  "triggers": { "crons": ["0 5 * * *"] }
+}

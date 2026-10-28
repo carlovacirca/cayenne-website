@@ -1,0 +1,14 @@
+---
+/* One published edition of the daily briefing */
+import Base from '../../layouts/Base.astro';
+import guideHead from '../../html/guide.head.html?raw';
+import insHead from '../../html/insights.head.html?raw';
+import { getIndex, getEdition, editionBody, isDate, longDate } from '../../lib/insights';
+export const prerender = false;
+const { date } = Astro.params;
+const ed = isDate(date) ? await getEdition(date) : null;
+if (!ed || ed.status !== 'published') return Astro.redirect('/insights', 302);
+Astro.response.headers.set('cache-control', 'public, max-age=3600');
+const idx = await getIndex();
+---
+<Base title={`${ed.title} · Insights · Cayenne`} description={`${longDate(ed.date)}: ${ed.intro}`} page="insights.html" head={guideHead + insHead} body={editionBody(ed, { archive: idx })} />

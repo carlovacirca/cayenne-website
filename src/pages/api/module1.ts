@@ -25,8 +25,8 @@ Reply with JSON only, in this shape:
  "prompt": "one ready-to-paste prompt for ChatGPT, Claude or Gemini that does that first job for their business, with [square brackets] where they add their own details"}`;
   const r = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
-    headers: { 'x-api-key': E.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
-    body: JSON.stringify({ model: 'claude-sonnet-5-5', max_tokens: 1200, messages: [{ role: 'user', content: prompt }] }),
+    headers: { 'x-api-key': E.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01', 'anthropic-beta': 'server-side-fallback-2026-07-01', 'content-type': 'application/json' },
+    body: JSON.stringify({ model: 'claude-sonnet-5-5', max_tokens: 1200, fallbacks: 'default', messages: [{ role: 'user', content: prompt }] }),
   });
   if (!r.ok) return json({ error: 'ai failed' }, 502);
   const d: any = await r.json();
