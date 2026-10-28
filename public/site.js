@@ -9,14 +9,16 @@
 
   var here = document.body.getAttribute('data-page') || location.pathname.split('/').pop() || 'index.html';
   if (here.indexOf('.') < 0) here = (here || 'index') + '.html';
+  function norm(h) { h = String(h || '').split('#')[0].split('?')[0].replace(/^\.?\//, '').replace(/\.html$/, ''); return h || 'index'; }
+  var hereN = norm(here);
 
   /* ---------- nav: mark the current page, phone menu ---------- */
-  $$('.links a, .foot a').forEach(function (a) { if (a.getAttribute('href') === here) a.setAttribute('aria-current', 'page'); });
+  $$('.links a, .foot a').forEach(function (a) { if (norm(a.getAttribute('href')) === hereN) a.setAttribute('aria-current', 'page'); });
   $$('.nav').forEach(function (nav) {
     var btn = $('.menu', nav); if (!btn) return;
     var panel = document.createElement('div'); panel.className = 'mnav'; panel.hidden = true;
-    panel.innerHTML = $$('.links a', nav).map(function (a) { return '<a href="' + a.getAttribute('href') + '"' + (a.getAttribute('href') === here ? ' aria-current="page"' : '') + '>' + a.textContent + '<span aria-hidden="true">→</span></a>'; }).join('') +
-      '<a href="signin.html">Sign in<span aria-hidden="true">→</span></a><a class="btn-create" href="index.html#top">Start the free course</a>';
+    panel.innerHTML = $$('.links a', nav).map(function (a) { return '<a href="' + a.getAttribute('href') + '"' + (norm(a.getAttribute('href')) === hereN ? ' aria-current="page"' : '') + '>' + a.textContent + '<span aria-hidden="true">→</span></a>'; }).join('') +
+      '<a href="/signin">Sign in<span aria-hidden="true">→</span></a><a class="btn-create" href="/#top">Start the free course</a>';
     nav.style.position = 'relative'; nav.appendChild(panel);
     btn.setAttribute('aria-expanded', 'false');
     btn.addEventListener('click', function (e) { e.stopPropagation(); panel.hidden = !panel.hidden; btn.setAttribute('aria-expanded', String(!panel.hidden)); });
@@ -84,9 +86,46 @@
     setTimeout(tick, 2600);
   });
 
-  /* ---------- prototype: forms never send anything ---------- */
+  /* ---------- Google sign-in: switch the buttons on once it is set up, save a course made before signing in ---------- */
+  fetch('/api/me').then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
+    if (!d || d.notReady) return;
+    $$('#google, .gbtn').forEach(function (a) { a.removeAttribute('data-soon'); a.setAttribute('href', '/api/auth/google?next=/my-course'); });
+    if (d.signedIn) {
+      document.documentElement.classList.add('signed-in');
+      var first = (d.name || '').split(' ')[0];
+      if (first) $$('[data-first-name]').forEach(function (el) { el.textContent = first; });
+      if (hereN === 'signin') location.replace('/my-course');
+      var saved = null; try { saved = sessionStorage.getItem('cy_course'); } catch (e) {}
+      if (saved) fetch('/api/progress', { method: 'POST', headers: { 'content-type': 'application/json' }, body: saved }).then(function () { try { sessionStorage.removeItem('cy_course'); } catch (e) {} });
+    }
+  }).catch(function () {});
+
+  /* ---------- forms: every form posts to /api/send with its kind; pages with their own success screen call cayenneSend ---------- */
+  function collect(form) {
+    var o = {};
+    $$('input, textarea, select', form).forEach(function (el) {
+      var k = el.name || el.id; if (!k || el.type === 'submit' || el.type === 'button') return;
+      if ((el.type === 'checkbox' || el.type === 'radio') && !el.checked) return;
+      o[k] = el.value;
+    });
+    return o;
+  }
+  window.cayenneCollect = collect;
+  window.cayenneSend = function (kind, fields) {
+    return fetch('/api/send', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ kind: kind, fields: fields }) })
+      .then(function (r) { return r.json().catch(function () { return { ok: r.ok }; }); })
+      .catch(function () { return { ok: false }; });
+  };
   document.addEventListener('submit', function (e) {
     var f = e.target; if (f.hasAttribute('data-live')) return;
-    e.preventDefault(); toast(f.getAttribute('data-done') || 'Thanks, we have got it');
+    e.preventDefault();
+    if (f.checkValidity && !f.checkValidity()) { f.reportValidity(); return; }
+    var kind = f.getAttribute('data-kind'); if (!kind) return;
+    var btn = f.querySelector('[type="submit"], button:not([type="button"])'); if (btn) btn.setAttribute('aria-busy', 'true');
+    window.cayenneSend(kind, collect(f)).then(function (r) {
+      if (btn) btn.removeAttribute('aria-busy');
+      if (r && r.ok) { toast(f.getAttribute('data-done') || 'Thanks, we have got it'); f.reset(); }
+      else toast((r && r.error) || 'Sorry, that did not send. Please try again.');
+    });
   });
 })();

@@ -286,10 +286,26 @@
     S.q = q;
     $('.clear', combo).hidden = !q;
     if (!q.trim()) { pop.hidden = true; input.setAttribute('aria-expanded', 'false'); S.res = []; return; }
-    S.res = results(q); S.hi = S.res.length ? 0 : -1;
+    if (LIVE.places !== true) S.res = results(q);
+    paintBiz(input, list, pop, q);
+    /* real Google Business Profiles when the search key is set up; the sample list otherwise */
+    clearTimeout(updateBiz.t);
+    if (LIVE.places !== false && q.trim().length >= 3) updateBiz.t = setTimeout(function () {
+      fetch('/api/places?q=' + encodeURIComponent(q.trim())).then(function (r) {
+        if (r.status === 501 || r.status === 404) { LIVE.places = false; return null; }
+        return r.ok ? r.json() : null;
+      }).then(function (d) {
+        if (!d || !d.results || S.q !== q) return;
+        LIVE.places = true; S.res = d.results; paintBiz(input, list, pop, q);
+      }).catch(function () {});
+    }, 260);
+  }
+  function paintBiz(input, list, pop, q) {
+    S.hi = S.res.length ? 0 : -1;
     list.innerHTML = S.res.length ? S.res.map(function (b, i) { return optHTML(b, i, q); }).join('') :
       '<li class="none">No matching profiles yet. Keep typing, or use the name as you typed it.</li>';
     $('.use-typed', pop).textContent = 'Can’t see it? Use “' + q.trim() + '”';
+    var src = $('.pop-h span:last-child', pop); if (src) src.textContent = LIVE.places === true ? 'From Google' : 'Sample data';
     pop.hidden = false; input.setAttribute('aria-expanded', 'true');
     setActive(input);
   }
@@ -428,7 +444,7 @@
   function loadingHTML() {
     var n = S.goals.length;
     return '<div class="ld" id="ld" role="status" aria-live="polite"><div class="ld-head"><div class="ld-trio" aria-hidden="true">' + logoSpan('openai') + logoSpan('claude') + logoSpan('gemini') + '</div>' +
-      '<div><div class="ld-title">Writing ' + esc(poss(S.biz.name)) + ' course</div><div class="ld-note">' + (S.ai && sampleFn ? 'Live AI is writing Module 1 for you' : 'This takes a few seconds') + '</div></div></div>' +
+      '<div><div class="ld-title">Writing ' + esc(poss(S.biz.name)) + ' course</div><div class="ld-note">' + ((S.ai && sampleFn) || LIVE.ai === true ? 'AI is writing Module 1 for you' : 'This takes a few seconds') + '</div></div></div>' +
       '<ol class="ld-steps"><li><span class="ld-ic"></span><span>' + (S.biz.custom ? 'Reading what you told us' : 'Reading your Google profile') + '</span></li>' +
       '<li><span class="ld-ic"></span><span>Matching lessons to your ' + n + ' ' + (n === 1 ? 'goal' : 'goals') + '</span></li>' +
       '<li><span class="ld-ic"></span><span>Writing Module 1 for level ' + S.level + '</span></li>' +
@@ -542,9 +558,9 @@
   /* ---------- the rest of the home page ---------- */
   function navHTML() {
     return '<header class="nav"><div class="nav-in wrap"><a class="brand" href="#top" data-act="top" aria-label="Cayenne home"><img src="' + IMG.logo + '" alt="Cayenne" width="128" height="36"></a>' +
-      '<nav class="links" aria-label="Main"><a href="course.html">Course</a><a href="audit.html">Free AI audit</a><a href="services.html">Services</a><a href="about.html">About</a></nav>' +
-      '<a class="signin" href="signin.html">Sign in</a><button type="button" class="menu" aria-label="Menu" aria-expanded="false" data-act="menu">' + IC.menu + '</button>' +
-      '<div class="mnav" id="mnav" hidden><a href="course.html">Course<span aria-hidden="true">→</span></a><a href="audit.html">Free AI audit<span aria-hidden="true">→</span></a><a href="services.html">Services<span aria-hidden="true">→</span></a><a href="about.html">About<span aria-hidden="true">→</span></a><a href="signin.html">Sign in<span aria-hidden="true">→</span></a></div></div></header>';
+      '<nav class="links" aria-label="Main"><a href="/course">Course</a><a href="/audit">Free AI audit</a><a href="/services">Services</a><a href="/about">About</a></nav>' +
+      '<a class="signin" href="/signin">Sign in</a><button type="button" class="menu" aria-label="Menu" aria-expanded="false" data-act="menu">' + IC.menu + '</button>' +
+      '<div class="mnav" id="mnav" hidden><a href="/course">Course<span aria-hidden="true">→</span></a><a href="/audit">Free AI audit<span aria-hidden="true">→</span></a><a href="/services">Services<span aria-hidden="true">→</span></a><a href="/about">About<span aria-hidden="true">→</span></a><a href="/signin">Sign in<span aria-hidden="true">→</span></a></div></div></header>';
   }
   function heroHTML() {
     return '<section class="snap hero" id="top"><div class="heat" aria-hidden="true"><i class="h1"></i><i class="h2"></i><i class="h3"></i></div>' + navHTML() +
@@ -553,7 +569,7 @@
       '<h1 class="hero-h in d1">A free AI course, built around <span class="slot" id="slot">' + (S.biz ? esc(S.biz.name) + '.' : 'your business.') + '</span></h1>' +
       '<div class="lede-w"><div><p class="lede in d2">Pick your business and your goals. Get your first lesson in under a minute.</p></div></div>' +
       '<div class="card in d3" id="card"><div class="card-in" id="creator"></div></div>' +
-      '<div class="alt-w"><div><p class="alt in d4">Prefer us to set it up for you? <a href="audit.html">Get a free AI audit</a></p></div></div></div></section>';
+      '<div class="alt-w"><div><p class="alt in d4">Prefer us to set it up for you? <a href="/audit">Get a free AI audit</a></p></div></div></div></section>';
   }
   function courseHTML() {
     var stages = [
@@ -578,7 +594,7 @@
       '<h2 class="sec-h">Not sure where AI fits? <em>We’ll show you.</em></h2>' +
       '<p class="sec-sub">Tell us how your business runs. We find where AI saves you time or wins you work, and put real numbers on it.</p>' +
       '<ul class="ticks"><li>' + IC.check + '<span><b>Short and simple.</b> A few questions about how you work today.</span></li><li>' + IC.check + '<span><b>Real numbers.</b> The hours you could save, worked out for you.</span></li><li>' + IC.check + '<span><b>A clear plan.</b> Use it yourself, or have us build it for you.</span></li></ul>' +
-      '<div class="cta-row"><a class="btn-create" href="audit.html">Get a free AI audit ' + IC.arrow + '</a><span class="note">Free · No obligation</span></div></div>' +
+      '<div class="cta-row"><a class="btn-create" href="/audit">Get a free AI audit ' + IC.arrow + '</a><span class="note">Free · No obligation</span></div></div>' +
       '<div class="report reveal" aria-label="Example audit report"><div class="rp-top"><span class="rp-k"><i aria-hidden="true"></i>AI audit</span><span class="rp-ex">Example report</span></div>' +
       '<div class="rp-biz"><span class="bc-map">' + IC.map + '</span><div><b>Harbourside Dental</b><span>Dental practice · Brighton</span></div></div>' +
       '<div class="rp-big"><span class="rp-num">9<small>h</small></span><span class="rp-lbl">a week AI could save this practice (estimate)</span></div>' +
@@ -597,7 +613,7 @@
       '<h2 class="sec-h">Rather have it <em>done for you?</em></h2>' +
       '<p class="sec-sub">We set up the tools, automate the busywork and train your team.</p>' +
       '<div class="serv">' + sv.map(function (s) { return '<div class="sv"><span class="sv-ic">' + IC[s[0]] + '</span><b>' + s[1] + '</b><p>' + s[2] + '</p><ul>' + s[3].map(function (x) { return '<li>' + x + '</li>'; }).join('') + '</ul></div>'; }).join('') + '</div>' +
-      '<div class="cta-row"><a class="btn-primary" href="services.html">See our services ' + IC.arrow + '</a></div></div></section>';
+      '<div class="cta-row"><a class="btn-primary" href="/services">See our services ' + IC.arrow + '</a></div></div></section>';
   }
   function faqHTML() {
     var qs = [
@@ -618,14 +634,14 @@
     return '<section class="snap sec s-why" id="why"><div class="heat" aria-hidden="true"><i class="h1"></i></div><div class="why"><div class="wrap why-grid">' +
       '<div><span class="sec-k"><i aria-hidden="true"></i>Why free?</span><h2 class="sec-h">Why is the course <em>free?</em></h2>' +
       '<p class="why-p">Because owners who understand AI make better decisions about it. Some will do everything themselves with the course. Some will want a hand. Either way, the course is yours to keep.</p>' +
-      '<div class="cta-row"><a class="btn-create" href="#top" data-act="start">Start the free course ' + IC.arrow + '</a><a class="btn-ghost" href="audit.html">Get a free AI audit</a></div></div>' +
+      '<div class="cta-row"><a class="btn-create" href="#top" data-act="start">Start the free course ' + IC.arrow + '</a><a class="btn-ghost" href="/audit">Get a free AI audit</a></div></div>' +
       '<ol class="ways"><li class="way"><span>1</span><b>Learn it yourself</b><p>The free course: eight modules, at your own pace.</p></li>' +
       '<li class="way"><span>2</span><b>Get a plan</b><p>The free AI audit: where AI fits, with real numbers.</p></li>' +
       '<li class="way"><span>3</span><b>Have it built</b><p>Our services: we set it up and look after it.</p></li></ol></div></div>' +
       '<footer class="foot"><div class="wrap"><div class="foot-in"><div class="foot-brand"><img src="' + IMG.logo + '" alt="Cayenne"><p>Plain-English AI for UK businesses. Learn it, plan it or have it built.</p></div>' +
-      '<div><h4>Cayenne</h4><ul><li><a href="course.html">The free course</a></li><li><a href="audit.html">Free AI audit</a></li><li><a href="services.html">Services</a></li><li><a href="guides.html">Guides</a></li></ul></div>' +
-      '<div><h4>Company</h4><ul><li><a href="about.html">About</a></li><li><a href="partners.html">Partners</a></li><li><a href="contact.html">Contact</a></li><li><a href="signin.html">Sign in</a></li></ul></div></div>' +
-      '<div class="foot-base"><span>© 2026 Cayenne. Made in the UK.</span><nav aria-label="Legal"><a href="legal.html#privacy">Privacy</a><a href="legal.html#cookies">Cookies</a><a href="legal.html#terms">Terms</a></nav></div></div></footer></section>';
+      '<div><h4>Cayenne</h4><ul><li><a href="/course">The free course</a></li><li><a href="/audit">Free AI audit</a></li><li><a href="/services">Services</a></li><li><a href="/guides">Guides</a></li></ul></div>' +
+      '<div><h4>Company</h4><ul><li><a href="/about">About</a></li><li><a href="/partners">Partners</a></li><li><a href="/contact">Contact</a></li><li><a href="/signin">Sign in</a></li></ul></div></div>' +
+      '<div class="foot-base"><span>© 2026 Cayenne. Made in the UK.</span><nav aria-label="Legal"><a href="/legal#privacy">Privacy</a><a href="/legal#cookies">Cookies</a><a href="/legal#terms">Terms</a></nav></div></div></footer></section>';
   }
 
   /* ---------- module 1 and sign-up ---------- */
@@ -640,7 +656,7 @@
     var bots = BOTS.map(function (x) { return '<a class="bot" href="' + x.url + '" target="_blank" rel="noopener"><span class="bot-l"><img src="' + IMG[x.k] + '" alt=""></span><b>' + x.name + '</b><small>' + x.by + '</small><p>' + x.desc + '</p></a>'; }).join('');
     var opens = BOTS.map(function (x) { return '<a class="open" href="' + x.url + '" target="_blank" rel="noopener"><img src="' + IMG[x.k] + '" alt="">' + x.name + '</a>'; }).join('');
     var gate = S.signed ?
-      '<div class="gate-ok"><b>You’re in. Module 2 is unlocked.</b><span>Prototype: this is where Google sign-in opens. After it, Module 2 unlocks and progress is saved to your account.</span></div>' :
+      '<div class="gate-ok"><b>You’re in. Module 2 is unlocked.</b><span>Your progress is saved to your account, so you can pick up on any device.</span></div>' :
       '<button type="button" class="gbtn" data-act="google">' + IC.g + '<span>Continue with Google</span></button><p class="gate-fine">Free. We only use your name and email to save your course.</p>';
     return '<div class="md">' +
       '<header class="md-top"><div class="md-top-in wrap"><a class="brand" href="#" data-act="home" aria-label="Back to the home page"><img src="' + IMG.logo + '" alt="Cayenne" width="112" height="32"></a>' +
@@ -734,7 +750,7 @@
       if (bar) bar.style.width = Math.max(4, k / 4 * 100) + '%';
     }
     stepAt(0);
-    var aiP = (S.ai && sampleFn) ? runAI() : Promise.resolve(null);
+    var aiP = (S.ai && sampleFn) ? runAI() : liveAI();
     later(function () { stepAt(1); }, 1100);
     later(function () { stepAt(2); }, 2300);
     var minWait = new Promise(function (r) { later(r, 3500); });
@@ -746,6 +762,19 @@
     });
   }
   function clean(s) { return String(s || '').replace(/\s*—\s*/g, ', ').replace(/\s*–\s*/g, ' to ').trim(); }
+  /* Module 1 written by Claude on the server; the designed example stays if it is not switched on or takes too long */
+  var LIVE = { places: null, ai: null, signin: false };
+  fetch('/api/me').then(function (r) { return r.ok ? r.json() : null; }).then(function (d) { if (d && !d.notReady) LIVE.signin = true; }).catch(function () {});
+  function liveAI() {
+    if (LIVE.ai === false) return Promise.resolve(null);
+    var b = S.biz, ctl = window.AbortController ? new AbortController() : null;
+    var stop = setTimeout(function () { if (ctl) ctl.abort(); }, 20000);
+    return fetch('/api/module1', { method: 'POST', headers: { 'content-type': 'application/json' }, signal: ctl ? ctl.signal : undefined,
+      body: JSON.stringify({ name: b.name, cat: b.custom ? '' : b.cat, town: b.town || '', level: S.level, goals: S.goals.map(function (id) { return goal(id).label; }) }) })
+      .then(function (r) { clearTimeout(stop); if (r.status === 501) { LIVE.ai = false; return null; } return r.ok ? r.json() : null; })
+      .then(function (r) { if (r && Array.isArray(r.whatIs) && Array.isArray(r.steps)) { LIVE.ai = true; return r; } return null; })
+      .catch(function () { clearTimeout(stop); return null; });
+  }
   function runAI() {
     var b = S.biz, gl = S.goals.map(function (id) { return goal(id).label; });
     var prompt = 'You are writing Module 1 of a free AI course for the owner of a small UK business.\n' +
@@ -822,9 +851,12 @@
         setSticky(false); goTop(); later(function () { var f = $('#biz') || $('#open-m1') || $('#cz-q'); if (f) f.focus({ preventScroll: true }); }, 500); break;
       case 'jump': var tg = $(t.getAttribute('href')); if (tg) { try { tg.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (er) { tg.scrollIntoView(); } } break;
       case 'menu': var mn = $('#mnav'); if (mn) { mn.hidden = !mn.hidden; t.setAttribute('aria-expanded', String(!mn.hidden)); } break;
-      case 'soon': toast('Prototype: this page comes later'); break;
+      case 'soon': toast('Coming soon'); break;
       case 'done1': keepScroll(function () { S.done1 = true; renderShell(); }); toast('Module 1 done. One more step to save it.'); break;
-      case 'google': keepScroll(function () { S.signed = true; renderShell(); }); toast('Prototype: Google sign-in would open here'); break;
+      case 'google':
+        /* real Google sign-in when it is set up: the course goes with them so it is saved to their account */
+        if (LIVE.signin) { try { sessionStorage.setItem('cy_course', JSON.stringify({ business: { name: S.biz.name, cat: S.biz.cat, town: S.biz.town }, goals: S.goals.map(function (id) { return goal(id).label; }), level: S.level, done: S.done1 ? ['m1'] : [] })); } catch (er) {} location.href = '/api/auth/google?next=/my-course'; break; }
+        keepScroll(function () { S.signed = true; renderShell(); }); toast('Google sign-in is coming soon'); break;
       case 'to-gate': var gt = $('#signup'); if (gt) gt.scrollIntoView({ behavior: 'smooth', block: 'center' }); break;
       case 'copy': copyPrompt(); break;
     }

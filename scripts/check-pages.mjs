@@ -20,7 +20,10 @@ for (const pg of pages) {
     const p = await ctx.newPage(); const errs = [];
     p.on('pageerror', e => errs.push(e.message)); p.on('console', m => { if (m.type() === 'error') errs.push(m.text()); });
     await p.route('http://site.test/**', async r => {
-      const u = new URL(r.request().url()); let f = decodeURIComponent(u.pathname.replace(/^\//, '')) || 'index.html';
+      const u = new URL(r.request().url());
+      /* no Worker here: answer the API the way a deploy without keys does */
+      if (u.pathname.startsWith('/api/')) return r.fulfill({ status: 200, contentType: 'application/json', body: '{"ok":false,"notReady":"keys"}' });
+      let f = decodeURIComponent(u.pathname.replace(/^\//, '')) || 'index.html';
       if (!path.extname(f)) f += '.html';
       const fp = path.join(DIR, f);
       if (!fs.existsSync(fp)) { errs.push('missing ' + f); return r.fulfill({ status: 404, body: '' }); }
