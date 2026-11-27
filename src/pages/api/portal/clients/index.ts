@@ -1,14 +1,22 @@
 // Clients and leads: the list (GET) and a new one (POST). Developer only.
 import type { APIRoute } from 'astro';
 import { json } from '../../../../lib/server';
-import { guard, isRes, db, body, cleanClient, newId, nowIso } from '../../../../lib/portal';
+import { guard, isRes, db, body, cleanClient, newId, nowIso, meta, parseDoc, progress, type AuditRow } from '../../../../lib/portal';
 export const prerender = false;
 
-export const GET: APIRoute = async ({ request }) => {
+export const GET: APIRoute = async ({ request, url }) => {
   const w = await guard(request, 'dev'); if (isRes(w)) return w;
-  const r = await (await db()).prepare(`SELECT c.*, (SELECT COUNT(*) FROM portal_audits a WHERE a.client_id = c.id) AS audits,
-    (SELECT MAX(a.updated_at) FROM portal_audits a WHERE a.client_id = c.id) AS last_audit FROM portal_clients c ORDER BY COALESCE(last_audit, c.updated_at) DESC`).all<any>();
-  return json({ clients: r.results || [] });
+  const kind = url.searchParams.get('kind'), d = await db();
+  const where = kind === 'lead' || kind === 'client' ? 'WHERE c.kind = ?' : '';
+  const r = await d.prepare(`SELECT c.*, (SELECT COUNT(*) FROM portal_audits a WHERE a.client_id = c.id) AS audits,
+    (SELECT MAX(a.updated_at) FROM portal_audits a WHERE a.client_id = c.id) AS last_audit FROM portal_clients c ${where} ORDER BY COALESCE(last_audit, c.updated_at) DESC`).bind(...(where ? [kind] : [])).all<any>();
+  const clients = r.results || [];
+  // the latest audit of each, with how far it has got
+  for (const c of clients) {
+    const a = await d.prepare('SELECT * FROM portal_audits WHERE client_id = ? ORDER BY number DESC LIMIT 1').bind(c.id).first<AuditRow>();
+    c.latest = a ? { ...meta(a), ...progress(parseDoc(a)) } : null;
+  }
+  return json({ clients });
 };
 
 export const POST: APIRoute = async ({ request }) => {
