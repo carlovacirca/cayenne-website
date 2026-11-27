@@ -27,6 +27,7 @@ The site runs as one Cloudflare Worker (`src/worker.ts`, settings in `wrangler.j
 | `SITE_URL` | The live address, e.g. `https://example.co.uk`, used in emailed links |
 | `INSIGHTS_APPROVER` | Who approves Insights (email). Defaults to `MAIL_TO` |
 | `INSIGHTS_AUTO_PUBLISH` | Set to `on` only to skip approval and publish each draft straight away |
+| `RANK_PORTAL_TOKEN` | The client portal's Clients section. The same value goes on the rank-automation Worker as `PORTAL_TOKEN` |
 
 The `DATA` KV namespace holds form copies, course progress, rate limits and the Insights editions. Cloudflare creates it on the first deploy.
 
