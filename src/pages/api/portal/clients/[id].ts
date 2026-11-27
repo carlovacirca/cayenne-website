@@ -1,7 +1,7 @@
 // One client or lead: details, audits and client logins (GET), update details (PATCH). Developer only.
 import type { APIRoute } from 'astro';
 import { json } from '../../../../lib/server';
-import { guard, isRes, db, body, cleanClient, nowIso } from '../../../../lib/portal';
+import { guard, isRes, db, body, cleanClient, nowIso, meta, parseDoc, progress, type AuditRow } from '../../../../lib/portal';
 export const prerender = false;
 
 export const GET: APIRoute = async ({ request, params }) => {
@@ -9,9 +9,10 @@ export const GET: APIRoute = async ({ request, params }) => {
   const d = await db();
   const c = await d.prepare('SELECT * FROM portal_clients WHERE id = ?').bind(params.id).first<any>();
   if (!c) return json({ error: 'Not found.' }, 404);
-  const a = await d.prepare('SELECT id, number, status, shared, parent_id, created_at, updated_at, completed_at FROM portal_audits WHERE client_id = ? ORDER BY number').bind(c.id).all<any>();
+  const a = await d.prepare('SELECT * FROM portal_audits WHERE client_id = ? ORDER BY number').bind(c.id).all<AuditRow>();
+  const audits = (a.results || []).map(x => ({ ...meta(x), ...progress(parseDoc(x)) }));
   const u = await d.prepare('SELECT id, email, name, must_change, disabled, created_at, last_login FROM portal_users WHERE client_id = ? ORDER BY created_at').bind(c.id).all<any>();
-  return json({ client: c, audits: a.results || [], users: u.results || [] });
+  return json({ client: c, audits, users: u.results || [] });
 };
 
 export const PATCH: APIRoute = async ({ request, params }) => {

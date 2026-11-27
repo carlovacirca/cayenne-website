@@ -3,7 +3,7 @@
 import { env } from 'cloudflare:workers';
 import { json, sign, unsign, cookie, limited } from './server';
 import type { AuditDoc, Research, Task, Template } from '../portal/logic';
-import { cleanResearch, validTemplate, numberQuestions, qKey, rKey, str } from '../portal/logic';
+import { cleanResearch, validTemplate, numberQuestions, qKey, rKey, str, stillNeeded, questionCount, answeredCount, checkedCount } from '../portal/logic';
 
 export type PEnv = {
   PORTAL_DB?: D1Database; SESSION_SECRET?: string; PORTAL_DEV_EMAIL?: string; PORTAL_DEV_PASSWORD?: string;
@@ -120,6 +120,16 @@ export function canSee(w: Who, a: AuditRow) { return w.role === 'dev' || (w.clie
 export function parseDoc(a: AuditRow): AuditDoc { const d = JSON.parse(a.doc) as AuditDoc; numberQuestions(d.template); return d; }
 export function meta(a: AuditRow) {
   return { id: a.id, client_id: a.client_id, number: a.number, status: a.status, shared: !!a.shared, parent_id: a.parent_id, rev: a.rev, created_at: a.created_at, updated_at: a.updated_at, completed_at: a.completed_at };
+}
+/* how far an audit has got: answered, checked, and what is still needed by priority */
+export function progress(d: AuditDoc) {
+  const need = stillNeeded(d), questions = questionCount(d), answered = answeredCount(d), items = d.research.items.length, checked = checkedCount(d);
+  const total = questions + items;
+  return {
+    questions, answered, items, checked, analysed: !!d.analysis,
+    p1: need.filter(n => n.pri === 1).length, p2: need.filter(n => n.pri === 2).length, p3: need.filter(n => n.pri === 3).length,
+    pct: total ? Math.round((answered + checked) / total * 100) : 0,
+  };
 }
 /* what a client is shown: no research labels, no competitors, no analysis or options */
 export function clientView(d: AuditDoc): AuditDoc {

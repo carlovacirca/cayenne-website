@@ -22,6 +22,25 @@ body[data-page="portal.html"] { padding-top: 0; background: var(--soft); color: 
 .pt-bar .pt-who { margin-left: auto; display: flex; align-items: center; gap: 12px; font-size: 14px; color: var(--mut); }
 .pt-bar .pt-me { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 28vw; }
 @media (max-width: 560px) { .pt-bar .pt-tag, .pt-bar .pt-me { display: none; } }
+.pt-topnav { display: flex; gap: 4px; padding-left: 14px; border-left: 1px solid var(--line); }
+.pt-topnav a { padding: 8px 13px; border-radius: 10px; font-size: 14.5px; font-weight: 600; color: var(--ink2); text-decoration: none; }
+.pt-topnav a:hover { color: var(--ink); background: var(--soft); }
+.pt-topnav a[aria-current="page"] { background: var(--ink); color: #FFFFFF; }
+@media (max-width: 420px) { .pt-topnav { padding-left: 8px; } .pt-topnav a { padding: 8px 9px; } .pt-bar img { width: 88px; } }
+/* how far an audit has got */
+.pt-mini { display: grid; grid-template-columns: minmax(80px, 1fr) auto; gap: 10px; align-items: center; font-size: 13px; color: var(--mut); min-width: 150px; }
+.pt-mini b { color: var(--ink); font-variant-numeric: tabular-nums; }
+.pt-p1 { color: var(--red); }
+@media (max-width: 600px) { .pt-mini { min-width: 0; } }
+.pt-audits { display: grid; }
+.pt-acard { padding: 16px 18px; border-top: 1px solid var(--line); display: grid; gap: 10px; }
+.pt-acard-h { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+.pt-acard-t { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.pt-acard-t a { color: var(--ink); text-decoration: none; font-size: 17px; }
+.pt-acard-t a:hover { color: var(--red); }
+.pt-astats { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13.5px; color: var(--ink2); }
+.pt-astats b { color: var(--ink); font-variant-numeric: tabular-nums; }
+.pt-astats .p1 b { color: var(--red); }
 .pt-wrap { max-width: 1360px; margin: 0 auto; padding: 24px max(20px, env(safe-area-inset-left, 0px)) 80px; }
 
 /* ---------- type, buttons, fields ---------- */
@@ -36,6 +55,8 @@ body[data-page="portal.html"] { padding-top: 0; background: var(--soft); color: 
 .pt-btn.red { background: var(--red); border-color: var(--red); color: #FFFFFF; }
 .pt-btn.red:hover { background: var(--red-h); }
 .pt-btn.dark { background: var(--ink); border-color: var(--ink); color: #FFFFFF; }
+.pt a.pt-btn { color: var(--ink); text-decoration: none; }
+.pt a.pt-btn.red, .pt a.pt-btn.dark { color: #FFFFFF; }
 .pt-btn.small { min-height: 34px; padding: 0 12px; font-size: 13px; }
 .pt-btn[disabled] { opacity: .5; cursor: not-allowed; }
 .pt-link { background: none; border: 0; padding: 0; color: var(--red); font-weight: 600; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; font-size: 14px; }
