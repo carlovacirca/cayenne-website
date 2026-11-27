@@ -7,6 +7,9 @@
   // DATA keeps form copies, course progress, rate limits and the Insights editions.
   // Cloudflare creates the namespace on the first deploy.
   "kv_namespaces": [{ "binding": "DATA" }],
+  // PORTAL_DB keeps the client portal: clients and leads, client logins and audits.
+  // Cloudflare creates the database on the first deploy; the portal makes its own tables on first use.
+  "d1_databases": [{ "binding": "PORTAL_DB" }],
   // the Insights draft is written at 05:00 UTC: 5am in winter, 6am in summer, UK time
   "triggers": { "crons": ["0 5 * * *"] }
 }

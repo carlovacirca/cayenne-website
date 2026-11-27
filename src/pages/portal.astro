@@ -1,0 +1,11 @@
+---
+/* The client portal: the developer sees every client, lead and audit; a client sees the audits shared with them.
+   The page is one screen app; everything it shows comes from /api/portal after sign-in. */
+import Base from '../layouts/Base.astro';
+import head from '../html/portal.head.html?raw';
+import body from '../html/portal.body.html?raw';
+---
+<Base title={"Client portal · Cayenne"} description={"Sign in to the Cayenne client portal."} page={"portal.html"} head={head} body={body} />
+<script>
+  import '../portal/app';
+</script>
