@@ -1,9 +1,10 @@
-// The audit screen: research and questions on the left, the live tally on the right. Every change saves on its own.
-// Every question and every research item has a "Not sure, need info" tick and an Extra context box.
+// The audit screen, laid out like the Cayenne Audit Machine: business details, stage tabs and questions on the left,
+// the live tally and the AI analysis on the right. Every question and every research item has a "Not sure, need info"
+// mark and an Extra context box. Every change saves on its own.
 import type { AuditDoc, Field, Question, Stage, Finding, Competitor, Task, Research } from './logic';
 import {
-  KIND, VERDICTS, qKey, rKey, fmt, str, qCoverage, researchCoverage, stillNeeded, scores, baseline, autos, services,
-  OPTIONS, LV, LVD, REPLY, choice, optResult, optionTotals, taskHours, totalTaskHours, summaryText, safeUrl,
+  KIND, VERDICTS, qKey, rKey, fmt, str, qCoverage, researchCoverage, checkedCount, answeredCount, stillNeeded, scores, baseline, autos, services,
+  OPTIONS, LV, LVD, REPLY, choice, optResult, taskHours, totalTaskHours, summaryText, safeUrl,
 } from './logic';
 import { api, esc, toast, copyText, twoStep, host, day, when } from './ui';
 
@@ -13,6 +14,7 @@ type Patch = {
   tasks?: Task[]; choices?: Record<string, number>; business?: Record<string, string>; research?: Research;
 };
 type SaveState = 'saved' | 'saving' | 'unsaved' | 'error' | 'locked';
+type Sibling = { id: string; number: number; status: string; completed_at: string | null };
 
 let A: { meta: Meta; client: { id: string; name: string } | null; doc: AuditDoc } | null = null;
 let role: 'dev' | 'client' = 'client';
@@ -21,27 +23,30 @@ let tab = '';
 let pending: Patch = {};
 let timer = 0, liveTimer = 0, inflight: Promise<void> | null = null;
 let saveState: SaveState = 'saved';
-let lastEdit = 0, showAll = false, bizOpen = false;
+let lastEdit = 0, showAll = false;
 let editing = ''; // a research item being edited ('new:<group>' for a new one), or 'comp:<index>' / 'comp:new'
-let ai = { running: false, text: '', t0: 0, error: '' };
-let aiTick = 0;
+let siblings: Sibling[] = [];
+let ai = { running: false, text: '', t0: 0, error: '', pct: 0, step: '', secs: 0 };
+let aiTick = 0, aiCtl: AbortController | null = null;
 let basis = 0; // when the answers behind the current analysis were saved
 let seq = 0;
 const bound = new WeakSet<HTMLElement>();
 
-const BIZ: [string, string, boolean][] = [['name', 'Business name', false], ['contact', 'Contact', false], ['location', 'Location', false], ['website', 'Websites', false], ['type', 'What they do', true], ['tools', 'Tools they use', true]];
+const BIZ: [string, string, boolean][] = [['name', 'Business name', false], ['contact', 'Contact', false], ['location', 'Location', false], ['website', 'Websites', false], ['type', 'What they do', true], ['tools', 'Tools they use (signs found online)', true]];
 const arr = (v: any): any[] => (Array.isArray(v) ? v : []);
 const short = (s: string, n: number) => (s.length > n ? s.slice(0, n - 1).trimEnd() + '…' : s);
 const pct = (x: number) => Math.round(x * 100) + '%';
 const dev = () => role === 'dev';
 const locked = () => !A || A.meta.status !== 'draft';
 const smooth = (): ScrollBehavior => (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth');
+const autoAi = () => { try { return localStorage.getItem('pt-autoai') === '1'; } catch { return false; } };
+const secLabel = (s: string) => s.replace(':', '').replace(/^(Section \d+) (\w)/, (_, a: string, b: string) => a + ' ' + b.toLowerCase());
 
 /* ================= opening and leaving ================= */
 export async function openAudit(id: string, r: 'dev' | 'client', el: HTMLElement) {
   await leaveAudit();
   role = r; main = el; const my = ++seq;
-  if (!bound.has(el)) { bound.add(el); el.addEventListener('input', onInput); el.addEventListener('change', onChange); el.addEventListener('click', onClick); el.addEventListener('toggle', onToggle, true); }
+  if (!bound.has(el)) { bound.add(el); el.addEventListener('input', onInput); el.addEventListener('change', onChange); el.addEventListener('click', onClick); }
   main.innerHTML = '<p class="pt-note">Loading the audit…</p>';
   try {
     const res = await api<{ meta: Meta; client: { id: string; name: string } | null; doc: AuditDoc }>('audits/' + encodeURIComponent(id));
@@ -51,13 +56,24 @@ export async function openAudit(id: string, r: 'dev' | 'client', el: HTMLElement
     d.business = d.business || {}; d.research = d.research || { groups: [], items: [], competitors: [] };
     A = { meta: res.meta, client: res.client, doc: d };
     basis = d.analysis ? Date.parse(d.analysis.at) : 0;
-    pending = {}; saveState = 'saved'; lastEdit = 0; editing = ''; showAll = false; ai = { running: false, text: '', t0: 0, error: '' };
+    pending = {}; saveState = 'saved'; lastEdit = 0; editing = ''; showAll = false; siblings = [];
+    ai = { running: false, text: '', t0: 0, error: '', pct: 0, step: '', secs: 0 };
     tab = startTab();
     render();
+    if (dev()) loadSiblings(my);
   } catch (e: any) {
     if (my !== seq) return;
     main.innerHTML = `<div class="pt-card pt-pad"><h2>This audit did not open</h2><p class="pt-sub">${esc(e.message)}</p><p><a class="pt-btn" href="#/">Back</a></p></div>`;
   }
+}
+/* the other audits for this business, for the picker at the top */
+async function loadSiblings(my: number) {
+  if (!A) return;
+  try {
+    const r = await api<{ audits: Sibling[] }>('clients/' + encodeURIComponent(A.meta.client_id));
+    if (my !== seq || !A) return;
+    siblings = r.audits || []; paintHead();
+  } catch { /* the picker just shows this audit */ }
 }
 
 /* Save anything waiting, then let the audit go. */
@@ -80,7 +96,7 @@ async function reload() {
     A.meta = res.meta; A.client = res.client; A.doc = res.doc;
     basis = A.doc.analysis ? Date.parse(A.doc.analysis.at) : 0;
     if (!validTab(tab)) tab = startTab();
-    render();
+    render(); if (dev()) loadSiblings(my);
   } catch (e: any) { toast(e.message); }
 }
 
@@ -93,7 +109,7 @@ function showResearch() { return dev() || A!.doc.research.items.length > 0; }
 function validTab(t: string) {
   if (!A) return false;
   if (t === 'research') return showResearch();
-  if (t === 'options' || t === 'analysis') return dev();
+  if (t === 'options') return dev();
   return A.doc.template.stages.some(s => s.id === t);
 }
 function tabOf(key: string) {
@@ -105,7 +121,7 @@ function order(): [string, string][] {
   const L: [string, string][] = [];
   if (showResearch()) L.push(['research', 'Research']);
   A!.doc.template.stages.forEach(s => L.push([s.id, s.name]));
-  if (dev()) { L.push(['options', 'Options']); L.push(['analysis', 'Analysis']); }
+  if (dev()) L.push(['options', 'Options']);
   return L;
 }
 
@@ -113,36 +129,41 @@ function order(): [string, string][] {
 function render() {
   if (!A) return;
   const m = A.meta, d = A.doc, name = A.client?.name || d.business.name || '';
+  const secs = Object.keys(d.template.sections).sort().map(k => secLabel(d.template.sections[k])).join(' · ');
   document.title = 'Audit ' + m.number + ' · ' + (name || 'Cayenne') + ' · Cayenne';
   main.innerHTML = `
-    <a class="pt-back" href="${dev() ? '#/client/' + encodeURIComponent(m.client_id) : '#/'}">← ${dev() ? esc(name || 'Client') : 'All audits'}</a>
-    <div class="pt-head">
-      <div><h1>Audit ${m.number} <em>${esc(name)}</em></h1><div class="pt-pills" id="ptPills">${pills()}</div></div>
-      <div class="pt-acts" id="ptActs">${actions()}</div>
+    <a class="pt-back" href="${dev() ? '#/client/' + encodeURIComponent(m.client_id) : '#/'}">← ${dev() ? esc(name || 'Lead') : 'All audits'}</a>
+    <div class="pt-top">
+      <div class="pt-brandline"><h1>Audit ${m.number}</h1><span>${esc(name)}${secs ? ' · ' + esc(secs) : ''}</span><span class="pt-pills" id="ptPills">${pills()}</span></div>
+      <div class="pt-right" id="ptActs">${actions()}</div>
     </div>
     ${banner()}
-    ${dev() ? bizCard() : ''}
     <div class="pt-grid">
-      <div class="pt-mainc"><div class="pt-tabwrap"><nav class="pt-tabs" role="tablist" aria-label="Parts of the audit" id="ptTabs">${tabs()}</nav></div><div class="pt-card" id="ptBody" role="tabpanel">${body()}</div></div>
-      <aside class="pt-side" id="ptSide" aria-label="Live results">${side()}</aside>
+      <div class="pt-mainc">${dev() ? bizCard() : ''}<div class="pt-tabwrap"><nav class="pt-tabs" role="tablist" aria-label="Parts of the audit" id="ptTabs">${tabs()}</nav></div><div class="pt-card" id="ptBody" role="tabpanel">${body()}</div></div>
+      <aside class="pt-side" id="ptSide" aria-label="Live analysis">${side()}</aside>
     </div>`;
+  main.querySelectorAll<HTMLTextAreaElement>('textarea.pt-ctx1').forEach(grow);
 }
 
 function pills() {
   const m = A!.meta;
   return `<span class="pt-pill${m.status === 'complete' ? ' go' : ''}">${m.status === 'complete' ? 'Finished ' + esc(day(m.completed_at)) : 'Open'}</span>`
-    + (dev() ? `<span class="pt-pill${m.shared ? ' red' : ''}">${m.shared ? 'Shared with the client' : 'Not shared'}</span>` : '')
-    + `<span class="pt-save" id="ptSave" aria-live="polite">${saveText()}</span>`;
+    + (dev() ? `<span class="pt-pill${m.shared ? ' red' : ''}">${m.shared ? 'Shared with the client' : 'Not shared'}</span>` : '');
 }
 function actions() {
-  if (!dev()) return '';
+  const save = `<span class="pt-save" id="ptSave" aria-live="polite">${saveText()}</span>`;
+  if (!dev()) return save;
   const m = A!.meta, done = m.status === 'complete';
-  return `<button class="pt-btn small" type="button" data-act="copy">Copy summary</button>`
-    + `<button class="pt-btn small" type="button" data-act="pdf">Download PDF</button>`
-    + `<button class="pt-btn small" type="button" data-act="${m.shared ? 'unshare' : 'share'}">${m.shared ? 'Stop sharing' : 'Share with client'}</button>`
+  const list = siblings.length ? siblings : [{ id: m.id, number: m.number, status: m.status, completed_at: m.completed_at }];
+  const pick = `<label class="pt-lbl" for="ptAuditSel">Audit</label><select class="pt-btn pt-sel" id="ptAuditSel">${list.slice().sort((a, b) => b.number - a.number).map(a => `<option value="${esc(a.id)}"${a.id === m.id ? ' selected' : ''}>Audit ${a.number}${a.status === 'complete' ? ', finished' : ', open'}</option>`).join('')}</select>`;
+  return pick
+    + `<button class="pt-btn" type="button" data-act="copy">Copy summary</button>`
+    + `<button class="pt-btn" type="button" data-act="pdf">Download PDF</button>`
+    + `<button class="pt-btn" type="button" data-act="${m.shared ? 'unshare' : 'share'}">${m.shared ? 'Stop sharing' : 'Share with client'}</button>`
     + (done
-      ? `<button class="pt-btn small" type="button" data-act="reopen">Reopen</button><button class="pt-btn red" type="button" data-act="next">Create Audit ${m.number + 1}</button>`
-      : `<button class="pt-btn red" type="button" data-act="finish">Finish Audit ${m.number}</button>`);
+      ? `<button class="pt-btn" type="button" data-act="reopen">Reopen</button><button class="pt-btn red" type="button" data-act="next">Create Audit ${m.number + 1}</button>`
+      : `<button class="pt-btn red" type="button" data-act="finish">Finish Audit ${m.number}</button>`)
+    + save;
 }
 function banner() {
   const m = A!.meta;
@@ -154,47 +175,43 @@ function banner() {
 }
 function bizCard() {
   const b = A!.doc.business, dis = locked() ? ' disabled' : '';
-  return `<details class="pt-card pt-bizbox"${bizOpen ? ' open' : ''}><summary>Business details</summary><div class="pt-biz">${BIZ.map(([k, l, full]) => full
-    ? `<label class="pt-f full">${l}<textarea class="pt-in" rows="2" data-biz="${k}"${dis}>${esc(b[k] || '')}</textarea></label>`
-    : `<label class="pt-f">${l}<input class="pt-in" type="text" data-biz="${k}" value="${esc(b[k] || '')}"${dis}></label>`).join('')}</div></details>`;
+  return `<div class="pt-card pt-biz">${BIZ.map(([k, l, full]) => `<label class="pt-f${full ? ' full' : ''}">${l}<input class="pt-in" type="text" data-biz="${k}" value="${esc(b[k] || '')}"${dis}></label>`).join('')}</div>`;
 }
 function tabs() {
   const d = A!.doc;
   const btn = (id: string, label: string, extra = '', sec = '') => `<button type="button" class="pt-tab" role="tab" data-tab="${esc(id)}" aria-selected="${tab === id}">${sec ? `<span class="s">${sec}</span>` : ''}${esc(label)}${extra ? `<span class="p">${extra}</span>` : ''}</button>`;
   let h = '';
   if (showResearch()) h += btn('research', 'Research', pct(researchCoverage(d)));
-  d.template.stages.forEach(s => { h += btn(s.id, s.short || s.name, pct(qCoverage(d, s)), 'S' + s.sec); });
-  if (dev()) h += btn('options', 'Options') + btn('analysis', 'Analysis', d.analysis ? 'ready' : '');
+  d.template.stages.forEach(s => { h += btn(s.id, s.short || s.name, pct(qCoverage(d, s)), String(s.sec)); });
+  if (dev()) h += btn('options', 'Options');
   return h;
 }
 function body() {
   if (tab === 'research') return researchHtml();
   if (tab === 'options') return optionsHtml();
-  if (tab === 'analysis') return analysisHtml();
   const s = A!.doc.template.stages.find(x => x.id === tab) || A!.doc.template.stages[0];
   return s ? stageHtml(s) : '';
 }
 function navHtml() {
   const L = order(), i = L.findIndex(x => x[0] === tab), p = L[i - 1], n = L[i + 1];
-  return `<div class="pt-nav">${p ? `<button class="pt-btn small" type="button" data-tab="${esc(p[0])}" data-top="1">← ${esc(p[1])}</button>` : '<span></span>'}${n ? `<button class="pt-btn small dark" type="button" data-tab="${esc(n[0])}" data-top="1">${esc(n[1])} →</button>` : ''}</div>`;
+  return `<div class="pt-nav"><button class="pt-btn" type="button"${p ? ` data-tab="${esc(p[0])}" data-top="1"` : ' disabled'}>Back</button>${n
+    ? `<button class="pt-btn red" type="button" data-tab="${esc(n[0])}" data-top="1" data-next="1">Next: ${esc(n[1])}</button>`
+    : dev() ? '<button class="pt-btn red" type="button" data-act="ai-run">Analyse with AI</button>' : ''}</div>`;
 }
 const mark = (key: string) => `<span class="pt-mark" data-mark="${esc(key)}" title="Not sure yet" aria-label="Not sure yet"${A!.doc.unsure[key] ? '' : ' hidden'}>?</span>`;
 
 /* ---------- questions ---------- */
 function stageHtml(s: Stage) {
   const sec = A!.doc.template.sections[String(s.sec)] || 'Section ' + s.sec;
-  return `<div class="pt-stagehead"><span class="k">${esc(sec)}</span><h2>${esc(s.name)}</h2></div>${s.qs.map(qHtml).join('')}${navHtml()}`;
+  return `<div class="pt-sechead"><span class="pt-tagline">${esc(sec)}</span><h2>${esc(s.name)}</h2></div>${s.qs.map(qHtml).join('')}${navHtml()}`;
 }
 function qHtml(q: Question) {
   const key = qKey(q.id);
-  const inline = q.f.filter(f => f.type === 'num' || f.type === 'text' || f.type === 'select');
-  const block = q.f.filter(f => f.type === 'chips' || f.type === 'long' || f.type === 'tasks');
   return `<div class="pt-q" id="q-${esc(q.id)}"${locked() ? ' data-locked' : ''}>
-    <div class="pt-qt"><span class="pt-qn">Q${q.n ?? ''}</span>${mark(key)}<span>${esc(q.t)}</span></div>
+    <div class="pt-qt"><span class="pt-qn">${q.n ?? ''}</span>${mark(key)}<span>${esc(q.t)}</span></div>
     ${q.hint ? `<div class="pt-hint">${esc(q.hint)}</div>` : ''}
     ${dev() && q.tip ? `<div class="pt-tip"><b>From the research:</b> ${esc(q.tip)}</div>` : ''}
-    ${inline.length ? `<div class="pt-row">${inline.map(fieldHtml).join('')}</div>` : ''}
-    ${block.map(fieldHtml).join('')}
+    <div class="pt-row">${q.f.map(fieldHtml).join('')}</div>
     ${ctxHtml(key)}
   </div>`;
 }
@@ -208,12 +225,12 @@ function fieldHtml(f: Field) {
       if (cur && opts.indexOf(cur) < 0) opts.push(cur);
       return `<label class="pt-f">${lab}<select class="pt-in" data-k="${k}" data-t="select"${dis}>${opts.map(o => `<option value="${esc(o)}"${cur === o ? ' selected' : ''}>${o ? esc(o) : 'Choose…'}</option>`).join('')}</select></label>`;
     }
-    case 'long': return `<label class="pt-f">${lab}<textarea class="pt-in" rows="2" data-k="${k}" data-t="long"${dis}>${esc(v ?? '')}</textarea></label>`;
+    case 'long': return `<label class="pt-f pt-full">${lab}<textarea class="pt-in" rows="2" data-k="${k}" data-t="long"${dis}>${esc(v ?? '')}</textarea></label>`;
     case 'chips': {
       const on = Array.isArray(v) ? v.map(String) : [];
-      return `<div class="pt-f">${lab ? `<span>${lab}</span>` : ''}<div class="pt-chips" role="group"${lab ? ` aria-label="${lab}"` : ''}>${(f.opts || []).map(o => `<button type="button" class="pt-chip" data-chip="${esc(o)}" data-k="${k}" aria-pressed="${on.indexOf(o) > -1}"${dis}>${esc(o)}</button>`).join('')}</div></div>`;
+      return `<div class="pt-f pt-full">${lab ? `<span>${lab}</span>` : ''}<div class="pt-chips" role="group"${lab ? ` aria-label="${lab}"` : ''}>${(f.opts || []).map(o => `<button type="button" class="pt-chip" data-chip="${esc(o)}" data-k="${k}" aria-pressed="${on.indexOf(o) > -1}"${dis}>${esc(o)}</button>`).join('')}</div></div>`;
     }
-    case 'tasks': return tasksHtml();
+    case 'tasks': return `<div class="pt-full">${tasksHtml()}</div>`;
   }
   return '';
 }
@@ -223,55 +240,54 @@ function tasksHtml() {
   if (!d.tasks.length && !lk) d.tasks = [blankTask(), blankTask(), blankTask()];
   const rows = d.tasks.map((t, i) => `<tr>
     <td><input class="pt-in" type="text" data-task="${i}" data-tf="task" value="${esc(t.task)}" aria-label="Task ${i + 1}"${dis}></td>
-    <td><input class="pt-in num" type="text" inputmode="decimal" data-task="${i}" data-tf="min" value="${esc(t.min)}" aria-label="Minutes each, task ${i + 1}"${dis}></td>
+    <td><input class="pt-in num" type="text" inputmode="decimal" data-task="${i}" data-tf="min" value="${esc(t.min)}" aria-label="Minutes, task ${i + 1}"${dis}></td>
     <td><input class="pt-in num" type="text" inputmode="decimal" data-task="${i}" data-tf="per" value="${esc(t.per)}" aria-label="Times a week, task ${i + 1}"${dis}></td>
     <td class="n" data-th="${i}">${taskHours(t) ? fmt(taskHours(t)) : ''}</td>
-    ${lk ? '' : `<td><button class="pt-link" type="button" data-act="task-del" data-i="${i}">Remove</button></td>`}</tr>`).join('');
-  return `<div class="pt-scroll"><table class="pt-tasks"><thead><tr><th>Task</th><th>Minutes each</th><th>Times a week</th><th class="n">Hours a year</th>${lk ? '' : '<th><span class="pt-sr">Remove</span></th>'}</tr></thead>
+    ${lk ? '' : `<td><button class="pt-btn small" type="button" data-act="task-del" data-i="${i}" aria-label="Remove task ${i + 1}">×</button></td>`}</tr>`).join('');
+  return `<div class="pt-scroll"><table class="pt-tasks"><thead><tr><th>Task</th><th>Minutes</th><th>Times a week</th><th class="n">Hours a year</th>${lk ? '' : '<th><span class="pt-sr">Remove</span></th>'}</tr></thead>
     <tbody>${rows || '<tr><td colspan="4" class="pt-note">No tasks.</td></tr>'}</tbody>
-    <tfoot><tr><td colspan="3">${lk ? '' : '<button class="pt-btn small" type="button" data-act="task-add">Add a task</button>'}</td><td class="n"><b id="ptTaskTotal">${fmt(totalTaskHours(d))}</b></td>${lk ? '' : '<td></td>'}</tr></tfoot></table></div>`;
+    <tfoot><tr class="total"><td colspan="3">${lk ? 'Total' : '<button class="pt-btn small" type="button" data-act="task-add">Add task</button>'}</td><td class="n"><b id="ptTaskTotal">${fmt(totalTaskHours(d))}</b></td>${lk ? '' : '<td></td>'}</tr></tfoot></table></div>`;
 }
 function ctxHtml(key: string) {
   const d = A!.doc, dis = locked() ? ' disabled' : '';
-  const ph = dev() ? 'Anything the business said that adds to or changes this. The AI analysis reads every box.' : 'Anything that adds to or changes your answer.';
-  return `<div class="pt-ctx"><div class="pt-ctx-top"><span>Extra context</span><label class="pt-unsure"><input type="checkbox" data-unsure="${esc(key)}"${d.unsure[key] ? ' checked' : ''}${dis}>Not sure, need info</label></div>
-    <textarea class="pt-in" rows="2" data-ctx="${esc(key)}" placeholder="${esc(ph)}" aria-label="Extra context"${dis}>${esc(d.ctx[key] || '')}</textarea></div>`;
+  const hint = dev() ? 'What they said about this. Goes into the summary and the AI analysis.' : 'Anything that adds to or changes your answer.';
+  return `<div class="pt-ctx"><div class="pt-ctx-top"><label for="c-${esc(key)}">Extra context <span class="pt-ctxhint">${hint}</span></label>
+      <label class="pt-unsure"><input type="checkbox" data-unsure="${esc(key)}"${d.unsure[key] ? ' checked' : ''}${dis}>Not sure, need info</label></div>
+    <textarea class="pt-in" id="c-${esc(key)}" rows="2" data-ctx="${esc(key)}"${dis}>${esc(d.ctx[key] || '')}</textarea></div>`;
 }
 
 /* ---------- research ---------- */
 function researchHtml() {
   const d = A!.doc, lk = locked();
-  let h = `<div class="pt-stagehead"><span class="k">Research</span><h2>${dev() ? 'Found online' : 'What we found online'}</h2><p class="pt-sub">${dev()
-    ? 'Check each item with the business. Every source link opens the page it was found on.'
-    : 'Is each one right? Pick True or Not true. Tick Not sure if you need to check.'}</p></div>`;
+  let h = dev()
+    ? `<div class="pt-sechead"><span class="pt-tagline">Before the meeting</span><h2>Research: what we found online</h2><p class="pt-note">From their websites, Google, reviews, socials, Companies House and marketplaces. Mark each one as it is checked with them. The AI treats "Not true" as wrong, anything unmarked as unconfirmed, and "Not sure" as rough and still to confirm.</p></div>`
+    : `<div class="pt-sechead"><span class="pt-tagline">From Cayenne</span><h2>What we found online</h2><p class="pt-note">Is each one right? Pick True or Not true. Pick Not sure if you need to check, and add anything useful underneath.</p></div>`;
   const groups = d.research.groups.length ? d.research.groups.slice() : [{ id: 'other', name: 'Research' }];
   const orphans = d.research.items.filter(f => !groups.some(g => g.id === f.g));
   if (orphans.length) groups.push({ id: '__other', name: 'Other' });
   groups.forEach(g => {
     const items = g.id === '__other' ? orphans : d.research.items.filter(f => f.g === g.id);
     if (!items.length && !dev()) return;
-    h += `<div class="pt-group"><h2>${esc(g.name)}</h2><span class="pt-note">${items.filter(f => d.verdict[f.id]).length} of ${items.length} checked</span>${dev() && !lk && g.id !== '__other' ? `<button class="pt-btn small" type="button" data-act="r-add" data-g="${esc(g.id)}">Add item</button>` : ''}</div>`;
-    if (editing === 'new:' + g.id) h += `<div class="pt-q">${itemForm(null, g.id)}</div>`;
-    if (!items.length && editing !== 'new:' + g.id) h += '<div class="pt-q"><p class="pt-note">Nothing here yet.</p></div>';
-    items.forEach(f => { h += editing === f.id ? `<div class="pt-q" id="r-${esc(f.id)}">${itemForm(f, f.g)}</div>` : itemHtml(f); });
+    h += `<div class="pt-q pt-grp"><div class="pt-grphead"><h3>${esc(g.name)}</h3><span class="pt-note">${items.filter(f => d.verdict[f.id]).length} of ${items.length} checked</span>${dev() && !lk && g.id !== '__other' ? `<button class="pt-btn small" type="button" data-act="r-add" data-g="${esc(g.id)}">Add item</button>` : ''}</div>`;
+    if (editing === 'new:' + g.id) h += itemForm(null, g.id);
+    if (!items.length && editing !== 'new:' + g.id) h += '<p class="pt-note">Nothing here yet.</p>';
+    items.forEach(f => { h += editing === f.id ? `<div id="r-${esc(f.id)}">${itemForm(f, f.g)}</div>` : itemHtml(f); });
+    h += '</div>';
   });
   if (dev()) h += competitorsHtml();
   return h + navHtml();
 }
-function linksHtml(src: { label: string; url: string }[], none: boolean) {
+function linksHtml(src: { label: string; url: string }[]) {
   const ok = src.filter(s => safeUrl(s.url));
-  if (!ok.length) return none ? '<div class="pt-src"><span class="pt-note">No source link yet</span></div>' : '';
-  return `<div class="pt-src"><span class="pt-note">${ok.length > 1 ? 'Sources:' : 'Source:'}</span>${ok.map(s => `<a href="${esc(s.url)}" target="_blank" rel="noopener noreferrer">${esc(s.label || host(s.url))} ↗</a>`).join('')}</div>`;
+  if (!ok.length) return dev() ? '<span class="pt-src">Source: no link yet</span>' : '';
+  return `<span class="pt-src">${ok.length > 1 ? 'Sources: ' : 'Source: '}${ok.map(s => `<a href="${esc(s.url)}" target="_blank" rel="noopener noreferrer">${esc(s.label || host(s.url))} ↗</a>`).join(', ')}</span>`;
 }
 function itemHtml(f: Finding) {
   const d = A!.doc, key = rKey(f.id), v = d.verdict[f.id] || '', lk = locked(), dis = lk ? ' disabled' : '';
-  return `<div class="pt-q" id="r-${esc(f.id)}"${lk ? ' data-locked' : ''}>
-    <div class="pt-find">
-      <div><div class="pt-qt">${mark(key)}<span>${dev() ? `<span class="pt-kind ${esc(f.k)}">${esc(KIND[f.k] || 'Fact')}</span>` : ''}${esc(f.t)}</span></div>${linksHtml(f.src, dev())}</div>
-      <div class="pt-chips" role="group" aria-label="Checked with the business">${VERDICTS.map(x => `<button type="button" class="pt-chip ${x === 'True' ? 'go' : 'no'}" data-verdict="${esc(f.id)}" data-v="${x}" aria-pressed="${v === x}"${dis}>${x}</button>`).join('')}</div>
-    </div>
-    ${dev() && !lk ? `<div class="pt-row pt-tools"><button class="pt-link" type="button" data-act="r-edit" data-id="${esc(f.id)}">Edit</button><button class="pt-link" type="button" data-act="r-del" data-id="${esc(f.id)}">Delete</button></div>` : ''}
-    ${ctxHtml(key)}
+  return `<div class="pt-find" id="r-${esc(f.id)}"${lk ? ' data-locked' : ''}>
+    <div class="pt-ft">${mark(key)}${dev() ? `<span class="pt-kind ${esc(f.k)}">${esc(KIND[f.k] || 'Fact')}</span>` : ''}${esc(f.t)}${linksHtml(f.src)}${dev() && !lk ? `<span class="pt-tools"><button class="pt-link" type="button" data-act="r-edit" data-id="${esc(f.id)}">Edit</button><button class="pt-link" type="button" data-act="r-del" data-id="${esc(f.id)}">Delete</button></span>` : ''}</div>
+    <div class="pt-chips" role="group" aria-label="Checked with the business">${VERDICTS.map(x => `<button type="button" class="pt-chip ${x === 'True' ? 'go' : 'no'}" data-verdict="${esc(f.id)}" data-v="${x}" aria-pressed="${v === x}"${dis}>${x}</button>`).join('')}<button type="button" class="pt-chip amber" data-unsure-chip="${esc(key)}" aria-pressed="${!!d.unsure[key]}"${dis}>Not sure</button></div>
+    <textarea class="pt-in pt-ctx1" rows="1" data-ctx="${esc(key)}" placeholder="Extra context" aria-label="Extra context"${dis}>${esc(d.ctx[key] || '')}</textarea>
   </div>`;
 }
 function itemForm(f: Finding | null, g: string) {
@@ -286,16 +302,15 @@ function itemForm(f: Finding | null, g: string) {
 }
 function competitorsHtml() {
   const c = A!.doc.research.competitors, lk = locked(), name = A!.doc.business.name || A!.client?.name || 'this business';
-  let h = `<div class="pt-group"><h2>Competitors</h2><span class="pt-note">${c.length}</span>${lk ? '' : '<button class="pt-btn small" type="button" data-act="c-add">Add competitor</button>'}</div>`;
-  if (editing === 'comp:new') h += `<div class="pt-q">${compForm(null, -1)}</div>`;
-  if (!c.length && editing !== 'comp:new') h += '<div class="pt-q"><p class="pt-note">None added yet.</p></div>';
-  c.forEach((x, i) => {
-    if (editing === 'comp:' + i) { h += `<div class="pt-q">${compForm(x, i)}</div>`; return; }
-    h += `<div class="pt-q"><div class="pt-qt"><span>${esc(x.n)}</span></div>
-      <div class="pt-kv2">${x.w ? `<div><span>What they offer</span>${esc(x.w)}</div>` : ''}${x.e ? `<div><span>Their edge</span>${esc(x.e)}</div>` : ''}${x.z ? `<div><span>Where ${esc(name)} can win</span>${esc(x.z)}</div>` : ''}</div>
-      ${linksHtml(x.url ? [{ label: host(x.url), url: x.url }] : [], true)}
-      ${lk ? '' : `<div class="pt-row pt-tools"><button class="pt-link" type="button" data-act="c-edit" data-i="${i}">Edit</button><button class="pt-link" type="button" data-act="c-del" data-i="${i}">Delete</button></div>`}</div>`;
-  });
+  let h = `<div class="pt-q pt-grp"><div class="pt-grphead"><h3>Competitors</h3><span class="pt-note">${c.length}</span>${lk ? '' : '<button class="pt-btn small" type="button" data-act="c-add">Add competitor</button>'}</div>`;
+  if (editing === 'comp:new') h += compForm(null, -1);
+  const i = editing.startsWith('comp:') && editing !== 'comp:new' ? Number(editing.slice(5)) : -1;
+  if (i > -1 && c[i]) h += compForm(c[i], i);
+  if (!c.length) return h + '<p class="pt-note">None added yet.</p></div>';
+  h += `<div class="pt-scroll"><table class="pt-tasks pt-comp stack"><thead><tr><th>Who</th><th>What they do</th><th>Their edge</th><th>Where ${esc(short(name, 28))} can win</th><th>Source</th>${lk ? '' : '<th><span class="pt-sr">Change</span></th>'}</tr></thead><tbody>${c.map((x, j) => `<tr>
+    <td data-l="Who"><b>${esc(x.n)}</b></td><td data-l="What they do">${esc(x.w)}</td><td data-l="Their edge">${esc(x.e)}</td><td data-l="Where they win">${esc(x.z)}</td>
+    <td data-l="Source">${x.url && safeUrl(x.url) ? `<a href="${esc(x.url)}" target="_blank" rel="noopener noreferrer">${esc(host(x.url))} ↗</a>` : '<span class="pt-note">none</span>'}</td>
+    ${lk ? '' : `<td><span class="pt-tools"><button class="pt-link" type="button" data-act="c-edit" data-i="${j}">Edit</button><button class="pt-link" type="button" data-act="c-del" data-i="${j}">Delete</button></span></td>`}</tr>`).join('')}</tbody></table></div></div>`;
   return h;
 }
 function compForm(x: Competitor | null, i: number) {
@@ -303,7 +318,7 @@ function compForm(x: Competitor | null, i: number) {
   return `<div class="pt-edit" data-form="comp:${i < 0 ? 'new' : i}"><div class="pt-form">
     <label class="pt-f">Name<input class="pt-in" type="text" data-e="n" value="${v('n')}"></label>
     <label class="pt-f">Website, https://<input class="pt-in" type="url" data-e="url" value="${v('url')}"></label>
-    <label class="pt-f full">What they offer<textarea class="pt-in" rows="2" data-e="w">${v('w')}</textarea></label>
+    <label class="pt-f full">What they do<textarea class="pt-in" rows="2" data-e="w">${v('w')}</textarea></label>
     <label class="pt-f full">Their edge<textarea class="pt-in" rows="2" data-e="e">${v('e')}</textarea></label>
     <label class="pt-f full">Where this business can win<textarea class="pt-in" rows="2" data-e="z">${v('z')}</textarea></label>
   </div><p class="pt-err" data-e="err" hidden></p>
@@ -312,49 +327,91 @@ function compForm(x: Competitor | null, i: number) {
 
 /* ---------- options ---------- */
 function optionsHtml() {
-  const d = A!.doc, t = optionTotals(d), lk = locked();
-  let h = `<div class="pt-stagehead"><span class="k">Options</span><h2>How AI could work here</h2><p class="pt-sub">Pick a level for each area. Hours come from the answers and are estimates.</p></div>
-    <div class="pt-q"><div class="pt-counts"><div><b>${fmt(t.today)}</b><span>Hours a year today</span></div><div><b>${fmt(t.after)}</b><span>Hours a year after</span></div><div><b>${fmt(t.saved)}</b><span>Saved (estimate)</span></div></div>
-    <div class="pt-legend">${[1, 2, 3, 4, 5].map(l => `<b>Level ${l}</b><span>${esc(LV[l])}. ${esc(LVD[l])}</span>`).join('')}</div></div>`;
-  OPTIONS.forEach(o => {
-    const c = choice(d, o), r: any = optResult(d, o);
-    const levels = o.kind === 'growth' ? [{ l: 4, label: 'Switch on', no: '' }] : (o.levels || []).map(x => ({ l: x.l, label: 'Level ' + x.l, no: x.no || '' }));
-    const chips = levels.map(x => `<button type="button" class="pt-chip" data-opt="${o.id}" data-lv="${x.l}" aria-pressed="${c === x.l}"${x.no || lk ? ' disabled' : ''}${x.no ? ` title="${esc(x.no)}"` : ''}>${esc(x.label)}</button>`).join('')
-      + `<button type="button" class="pt-chip" data-opt="${o.id}" data-lv="0" aria-pressed="${c === 0}"${lk ? ' disabled' : ''}>Skip</button>`;
-    let detail = '';
-    if (o.kind === 'growth') detail = `<p>${esc(o.d || '')}</p><p class="pt-note">Measured by: ${esc(o.m || '')}</p>`;
-    else {
-      detail = c ? `<p>${esc(r.lv?.d || '')}</p>` : '<p class="pt-note">Skipped.</p>';
-      if (!r.b) detail += `<p class="pt-note">${esc(o.needs || 'Needs answers.')}</p>`;
-      else if (o.kind === 'hours') detail += `<div class="pt-kv"><span class="k">Today</span><span class="v">${fmt(r.today)} h a year</span><span class="k">After</span><span class="v">${fmt(r.after)} h a year</span><span class="k">Saved (estimate)</span><span class="v">${fmt(r.today - r.after)} h</span></div><p class="pt-note">${esc(r.b.sum)}</p>`;
-      else detail += `<div class="pt-kv"><span class="k">Reviews a year today</span><span class="v">${fmt(r.today)}</span><span class="k">After</span><span class="v">${fmt(r.after)}</span></div><p class="pt-note">${esc(r.b.j.sum)}. Assumes ${Math.round(REPLY * 100)}% of those asked leave a review.</p>`;
-      const no = (o.levels || []).filter(x => x.no).map(x => x.no as string);
-      if (no.length) detail += `<p class="pt-note">${esc(no.join(' '))}</p>`;
-    }
-    h += `<div class="pt-q"><div class="pt-qt"><span>${esc(o.name)}</span></div><div class="pt-chips" role="group" aria-label="${esc(o.name)}">${chips}</div>${detail}</div>`;
-  });
+  const d = A!.doc, lk = locked();
+  let t = 0, a = 0;
+  const rows = OPTIONS.filter(o => o.kind === 'hours').map(o => {
+    const r: any = optResult(d, o), c = choice(d, o), lvl = c ? 'Level ' + c + ': ' + LV[c] : 'Skipped';
+    if (!r.b) return `<tr><td>${esc(o.name)}</td><td class="miss" colspan="3">needs answers</td></tr>`;
+    t += r.today; a += r.after;
+    return `<tr><td>${esc(o.name)}<div class="pt-note">${esc(lvl)}</div></td><td class="n">${fmt(r.today)}</td><td class="n">${fmt(r.after)}</td><td class="n">${fmt(r.today - r.after)}</td></tr>`;
+  }).join('');
+  const revO = OPTIONS.find(o => o.id === 'rev'), rev: any = revO ? optResult(d, revO) : { b: null };
+  const growth = OPTIONS.filter(o => o.kind === 'growth' && choice(d, o)).length;
+  let h = `<div class="pt-sechead"><span class="pt-tagline">Both sections</span><h2>Options: how AI could work here</h2>
+      <p class="pt-note">Pick a level for each area. Results update straight away. Every "after" figure is an estimate: today's hours × the share that level usually removes.</p>
+      <div class="pt-legend">${[1, 2, 3, 4, 5].map(l => `<b>${l}. ${esc(LV[l])}</b><span>${esc(LVD[l])}</span>`).join('')}</div></div>
+    <div class="pt-q"><div class="pt-qt">Results</div><div class="pt-scroll"><table class="pt-tasks"><thead><tr><th>Area</th><th class="n">Today h/yr</th><th class="n">After h/yr</th><th class="n">Saved h/yr</th></tr></thead><tbody>${rows}
+      <tr class="total"><td>Total</td><td class="n">${fmt(t)}</td><td class="n">${fmt(a)}</td><td class="n">${fmt(t - a)}</td></tr></tbody></table></div>
+      <div class="pt-kv"><span class="k">Saved per month</span><span class="v${t ? '' : ' miss'}">${t ? fmt((t - a) / 12) + ' h' : 'missing'}</span>
+        <span class="k">New reviews a year</span><span class="v${rev.b ? '' : ' miss'}">${rev.b ? '~' + fmt(rev.today) + ' → ~' + fmt(rev.after) : 'missing'}</span>
+        <span class="k">Growth engines on</span><span class="v">${growth}</span></div>
+      ${rev.b ? `<div class="pt-note">Reviews: ${esc(rev.b.j.sum)} orders × ask rate × ${Math.round(REPLY * 100)}% reply rate (assumed).</div>` : ''}</div>`;
+  h += OPTIONS.map(o => {
+    const r: any = optResult(d, o), c = choice(d, o), dis = lk ? ' disabled' : '';
+    if (o.kind === 'growth') return `<div class="pt-q"><div class="pt-qt"><span class="pt-qn">4</span><span>${esc(o.name)}</span></div><div class="pt-lvdesc">${esc(o.d || '')}</div><div class="pt-note">Measure: ${esc(o.m || '')}</div>
+      <div class="pt-chips"><button type="button" class="pt-chip" data-opt="${o.id}" data-lv="4" aria-pressed="${c === 4}"${dis}>Switch on</button><button type="button" class="pt-chip" data-opt="${o.id}" data-lv="0" aria-pressed="${c === 0}"${dis}>Skip</button></div></div>`;
+    let est = '';
+    if (r.b && o.kind === 'hours') est = c ? 'Saves ~' + fmt(r.today - r.after) + ' h a year (' + fmt(r.today) + ' h × ' + Math.round(r.cut * 100) + '%, estimate)' : 'Today: ' + fmt(r.today) + ' h a year';
+    if (r.b && o.kind === 'outcome') est = '~' + fmt(r.today) + ' → ~' + fmt(r.after) + ' new reviews a year (estimate)';
+    const no = (o.levels || []).find(x => x.no);
+    return `<div class="pt-q"><div class="pt-qt">${esc(o.name)}</div><div class="pt-hint">${esc(r.b ? (o.kind === 'hours' ? 'Today: ' + r.b.sum : r.b.j.sum + ' orders a year') : o.needs || 'Needs answers.')}</div>
+      <div class="pt-chips"><button type="button" class="pt-chip" data-opt="${o.id}" data-lv="0" aria-pressed="${c === 0}"${dis}>Skip</button>${(o.levels || []).map(x => `<button type="button" class="pt-chip" data-opt="${o.id}" data-lv="${x.l}" aria-pressed="${c === x.l}"${x.no || lk ? ' disabled' : ''}${x.no ? ` title="${esc(x.no)}"` : ''}>${x.l}. ${esc(LV[x.l])}</button>`).join('')}</div>
+      <div class="pt-lvdesc">${esc(r.lv ? r.lv.d || '' : (no && no.no) || 'Skipped.')}</div>${est ? `<div class="pt-est">${esc(est)}</div>` : ''}</div>`;
+  }).join('');
   return h + navHtml();
 }
 
-/* ---------- AI analysis ---------- */
-function stale() { return !!A!.doc.analysis && lastEdit > basis; }
-function aiStep() {
-  const t = ai.text;
-  if (!t) return 'Reading the audit';
-  const steps: [string, string][] = [['"summary"', 'Writing the summary'], ['"money"', 'Where the money comes in'], ['"stages"', 'Scoring each stage'], ['"services"', 'Choosing the likely services'], ['"automations"', 'Writing the automation specs'], ['"ask_next"', 'Listing what to ask next']];
-  let best = 'Starting', at = -1;
-  steps.forEach(([k, l]) => { const i = t.lastIndexOf(k); if (i > at) { at = i; best = l; } });
-  return best;
+/* ---------- the live panel ---------- */
+function side() {
+  let h = needPane();
+  if (!dev()) return h;
+  return h + scoresPane() + servicesPane() + baselinePane() + autosPane() + aiPane();
 }
-function aiControls() {
-  if (ai.running) {
-    const secs = Math.round((Date.now() - ai.t0) / 1000), n = ai.text.length, p = n ? Math.max(4, Math.min(95, Math.round(n / 90))) : 2;
-    const sv = (ai.text.match(/"service"\s*:/g) || []).length, au = (ai.text.match(/"trigger"\s*:/g) || []).length;
-    return `<div class="pt-prog"><div class="pt-pbar" role="progressbar" aria-label="AI analysis" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${p}"><i style="width:${p}%"></i></div>
-      <div class="pt-prow"><span>${esc(aiStep())}</span><span><b>${secs}</b> s</span><span><b>${fmt(n)}</b> characters</span>${sv ? `<span><b>${sv}</b> services</span>` : ''}${au ? `<span><b>${au}</b> automations</span>` : ''}</div>
-      <p class="pt-note">Keep this page open until it finishes. It usually takes 1 to 3 minutes.</p></div>`;
-  }
-  return `${ai.error ? `<p class="pt-err" role="alert">${esc(ai.error)}</p>` : ''}<button class="pt-btn red" type="button" data-act="ai-run">${A!.doc.analysis ? 'Run the analysis again' : 'Run the AI analysis'}</button>`;
+function needPane() {
+  const need = stillNeeded(A!.doc), c = [1, 2, 3].map(p => need.filter(n => n.pri === p).length), list = showAll ? need : need.slice(0, 8);
+  return `<section class="pt-card pt-pane"><h3>${dev() ? 'Still needed' : 'Still to do'}</h3>
+    <div class="pt-counts"><div><b>${c[0]}</b><span>Not sure, nothing yet</span></div><div><b>${c[1]}</b><span>Not sure, to confirm</span></div><div><b>${c[2]}</b><span>Not answered yet</span></div></div>
+    ${need.length ? `<div class="pt-need">${list.map(n => `<button type="button" data-go="${esc(n.key)}"><span class="pt-pri p${n.pri}">P${n.pri}</span><span>${esc(short(n.label, 110))}</span></button>`).join('')}</div>${need.length > 8 ? `<button class="pt-link" type="button" data-act="need-all">${showAll ? 'Show fewer' : 'Show all ' + need.length}</button>` : ''}` : '<p class="pt-note">Nothing outstanding.</p>'}
+    <p class="pt-note">${dev() ? 'P1 first: not sure with nothing written. Then P2: not sure with a rough answer. Then P3: not answered.' : 'Start with P1: things marked not sure with nothing written yet.'}</p></section>`;
+}
+function scoresPane() {
+  const d = A!.doc, s = scores(d), cc = checkedCount(d), n = d.research.items.length;
+  let h = `<div class="pt-score"><span>Research</span><div class="pt-bar2" role="img" aria-label="Research checked ${cc} of ${n}"><i style="width:${Math.round(researchCoverage(d) * 100)}%"></i></div><span class="v">${cc}</span><span class="c">Checked with them ${cc} of ${n}</span></div>`;
+  let last = 0;
+  d.template.stages.forEach(st => {
+    if (s[st.id] == null) return;
+    if (st.sec !== last) { h += `<div class="pt-secl">${esc(d.template.sections[String(st.sec)] || 'Section ' + st.sec)}</div>`; last = st.sec; }
+    h += `<div class="pt-score"><span>${esc(st.short || st.name)}</span><div class="pt-bar2" role="img" aria-label="${esc(st.name)} opportunity ${s[st.id]} of 100"><i style="width:${s[st.id]}%"></i></div><span class="v">${s[st.id]}</span><span class="c">Coverage ${pct(qCoverage(d, st))}</span></div>`;
+  });
+  return `<section class="pt-card pt-pane"><h3>Stage scores</h3><p class="pt-note">Opportunity: how much better each stage could run. Coverage: how much of it is answered.</p>${h}</section>`;
+}
+function servicesPane() {
+  const L = services(A!.doc), secs = A!.doc.template.sections, FIT: Record<string, string> = { strong: 'high', likely: 'medium', possible: 'low' };
+  let last = 0;
+  const items = L.map(x => { const head = x.sec !== last ? `<div class="pt-secl">${esc(secs[String(x.sec)] || 'Section ' + x.sec)}</div>` : ''; last = x.sec; return head + `<div class="pt-item"><div class="h"><b>${esc(x.n)}</b><span class="pt-conf ${FIT[x.fit]}">${x.fit}</span></div><div class="w">${esc(x.why)}</div></div>`; }).join('');
+  return `<section class="pt-card pt-pane"><h3>Best-fit services</h3><p class="pt-note">Strong: their answers back it. Likely: the research points to it, still to confirm.</p>${items}</section>`;
+}
+function baselinePane() {
+  return `<section class="pt-card pt-pane"><h3>Baseline numbers</h3><div class="pt-kv">${baseline(A!.doc).map(([k, v]) => `<span class="k">${esc(k)}</span><span class="v${v == null ? ' miss' : ''}">${v == null ? 'missing' : esc(v)}</span>`).join('')}</div></section>`;
+}
+function autosPane() {
+  const L = autos(A!.doc);
+  return `<section class="pt-card pt-pane"><h3>Likely automations</h3>${L.length ? L.map(a => `<div class="pt-item"><div class="h"><b>${esc(a.n)}</b><span class="pt-conf ${a.c}">${a.c}</span></div><div class="w">Section ${a.sec}. ${esc(a.why)}</div>${a.est ? `<div class="e">${esc(a.est)}</div>` : ''}</div>`).join('') : '<p class="pt-note">Ideas appear here as the answers come in.</p>'}</section>`;
+}
+
+/* ---------- AI analysis, written inline like the Audit Machine ---------- */
+function stale() { return !!A!.doc.analysis && lastEdit > basis; }
+function aiStatus() {
+  if (ai.error) return esc(ai.error);
+  if (ai.running) return 'Analysing everything. Keep this page open until it finishes.';
+  const a = A!.doc.analysis;
+  if (a) return `Last analysed ${esc(when(a.at))}${a.secs ? ', in ' + a.secs + ' seconds' : ''}.${stale() ? ' <b>Answers changed since. Run it again to include them.</b>' : ' Re-run after new answers.'}`;
+  return 'Check the research, answer a few questions, then press Analyse. The AI reads every answer, every Extra context box and every not sure mark, then writes the money picture, best-fit services and build specs. Takes 1 to 3 minutes.';
+}
+function aiProg() {
+  if (!ai.running && !ai.step) return '';
+  return `<div class="pt-prog"><div class="pt-pbar" role="progressbar" aria-label="Analysis progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(ai.pct)}"><i style="width:${Math.round(ai.pct)}%"></i></div>
+    <div class="pt-prow"><b>${Math.round(ai.pct)}%</b><span>${esc(ai.step)}</span><span class="t">${ai.secs}s</span></div>${ai.running ? '<div><button class="pt-btn small" type="button" data-act="ai-stop">Stop</button></div>' : ''}</div>`;
 }
 function evLabel(id: string) {
   if (id.startsWith('q:')) { for (const s of A!.doc.template.stages) for (const q of s.qs) if (qKey(q.id) === id) return 'Q' + q.n; }
@@ -365,67 +422,30 @@ function evid(list: any) {
   const L = arr(list).map(String).filter(x => /^[qr]:/.test(x));
   return L.length ? `<div class="pt-ev"><span>Based on</span>${L.map(id => `<button type="button" class="pt-evb" data-go="${esc(id)}">${esc(evLabel(id))}</button>`).join('')}</div>` : '';
 }
-function specHtml(x: any) {
-  const row = (k: string, v: any) => {
-    if (v == null || v === '' || (Array.isArray(v) && !v.length)) return '';
-    return `<dt>${k}</dt><dd>${Array.isArray(v) ? (k === 'Steps' ? `<ol>${v.map(s => `<li>${esc(s)}</li>`).join('')}</ol>` : v.map(esc).join(', ')) : esc(v)}</dd>`;
-  };
-  const c = ['high', 'medium', 'low'].indexOf(x.confidence) > -1 ? x.confidence : 'low';
-  return `<div class="pt-item pt-spec"><div class="h"><b>${x.priority ? esc(x.priority) + '. ' : ''}${esc(x.name)}</b>${x.confidence ? `<span class="pt-conf ${c}">${esc(x.confidence)}</span>` : ''}</div>
-    <dl>${row('Problem', x.problem)}${row('Trigger', x.trigger)}${row('Steps', x.steps)}${row('Result', x.result)}${row('Tools', x.tools)}${row('AI does', x.ai_role)}${row('Staff approve', x.staff_approve)}${row('Fallback', x.fallback)}${row('Measure', x.metric)}${row('Estimate', x.estimate)}</dl>${evid(x.evidence)}</div>`;
-}
-function analysisHtml() {
+function aiOut() {
   const a = A!.doc.analysis, r = a && a.result ? a.result : null;
-  let h = `<div class="pt-stagehead"><span class="k">AI analysis</span><h2>Likely services and automations</h2><p class="pt-sub">${a
-    ? `Run ${esc(when(a.at))}${a.secs ? ', took ' + a.secs + ' seconds' : ''}.${stale() ? ' <b>Answers changed since. Run it again to include them.</b>' : ''}`
-    : 'Not run yet. It reads every answer, every Extra context box and every not sure mark, then picks the likely services and automations.'}</p></div>
-    <div class="pt-q"><div data-ai-controls>${aiControls()}</div></div>`;
-  if (!r) return h + navHtml();
-  if (r.summary) h += `<div class="pt-q"><h3>Summary</h3><p>${esc(r.summary)}</p></div>`;
-  if (arr(r.ask_next).length) h += `<div class="pt-q"><h3>Ask next</h3><ol>${arr(r.ask_next).map(x => `<li>${esc(x)}</li>`).join('')}</ol></div>`;
-  if (arr(r.money).length) h += `<div class="pt-q"><h3>Where the money comes in</h3><div class="pt-scroll"><table class="pt-table"><thead><tr><th>Channel</th><th>Share</th><th>Comment</th></tr></thead><tbody>${arr(r.money).map(m => `<tr><td>${esc(m.channel)}</td><td>${esc(m.share)}</td><td>${esc(m.comment)}</td></tr>`).join('')}</tbody></table></div></div>`;
-  if (arr(r.services).length) h += `<div class="pt-q"><h3>Likely services</h3>${arr(r.services).map(s => `<div class="pt-item"><div class="h"><b>${esc(s.service)}</b>${s.fit ? `<span class="pt-conf ${s.fit === 'strong' ? 'high' : 'medium'}">${esc(s.fit)}</span>` : ''}</div><div class="w">${s.section ? 'Section ' + esc(s.section) + '. ' : ''}${esc(s.why)}</div>${s.first_step ? `<div class="e">First step: ${esc(s.first_step)}</div>` : ''}${evid(s.evidence)}</div>`).join('')}</div>`;
-  if (arr(r.automations).length) h += `<div class="pt-q"><h3>Likely automations</h3>${arr(r.automations).map(specHtml).join('')}</div>`;
-  if (arr(r.stages).length) h += `<div class="pt-q"><h3>Stage by stage</h3>${arr(r.stages).map(s => `<div class="pt-item"><div class="h"><b>${esc(s.stage)}</b><span class="pt-conf low">${esc(s.score)}</span></div><div class="w">${esc(s.why)}</div>${arr(s.missing).length ? `<div class="e">Missing: ${arr(s.missing).map(esc).join('; ')}</div>` : ''}</div>`).join('')}</div>`;
-  return h + navHtml();
-}
-
-/* ---------- the live panel ---------- */
-function side() {
-  let h = needPane();
-  if (!dev()) return h;
-  return h + aiPane() + scoresPane() + servicesPane() + autosPane() + baselinePane();
-}
-function needPane() {
-  const need = stillNeeded(A!.doc), c = [1, 2, 3].map(p => need.filter(n => n.pri === p).length), list = showAll ? need : need.slice(0, 8);
-  return `<section class="pt-card pt-pane"><h2>${dev() ? 'Still needed' : 'Still to do'}</h2>
-    <div class="pt-counts"><div><b>${c[0]}</b><span>Not sure, nothing yet</span></div><div><b>${c[1]}</b><span>Not sure, to confirm</span></div><div><b>${c[2]}</b><span>Not answered yet</span></div></div>
-    ${need.length ? `<div class="pt-need">${list.map(n => `<button type="button" data-go="${esc(n.key)}"><span class="pt-pri p${n.pri}">P${n.pri}</span><span>${esc(short(n.label, 110))}</span></button>`).join('')}</div>${need.length > 8 ? `<button class="pt-link" type="button" data-act="need-all">${showAll ? 'Show fewer' : 'Show all ' + need.length}</button>` : ''}` : '<p class="pt-note">Nothing outstanding.</p>'}
-    <p class="pt-note">${dev() ? 'P1 first: not sure with nothing written. Then P2: not sure with a rough answer. Then P3: not answered.' : 'Start with P1: things marked not sure with nothing written yet.'}</p></section>`;
+  if (!r) return '';
+  let h = '';
+  if (r.summary) h += `<p>${esc(r.summary)}</p>`;
+  if (arr(r.money).length) h += `<div><h4>Where the money comes in</h4><div class="pt-kv">${arr(r.money).map(m => `<span class="k">${esc(m.channel)}${m.comment ? ': ' + esc(m.comment) : ''}</span><span class="v">${esc(m.share)}</span>`).join('')}</div></div>`;
+  if (arr(r.ask_next).length) h += `<div><h4>Ask next</h4><ol>${arr(r.ask_next).map(x => `<li>${esc(x)}</li>`).join('')}</ol></div>`;
+  if (arr(r.services).length) h += `<div class="pt-aiblock"><h4>Services that fit</h4>${arr(r.services).map(s => `<div class="pt-item"><div class="h"><b>${esc((s.section ? 'S' + s.section + '. ' : '') + (s.service || ''))}</b>${s.fit ? `<span class="pt-conf ${s.fit === 'strong' ? 'high' : 'medium'}">${esc(s.fit)}</span>` : ''}</div><div class="w">${esc(s.why || '')}</div>${s.first_step ? `<div class="e">First step: ${esc(s.first_step)}</div>` : ''}${evid(s.evidence)}</div>`).join('')}</div>`;
+  if (arr(r.stages).length) h += `<div><h4>AI stage view</h4><div class="pt-kv">${arr(r.stages).map(s => `<span class="k">${esc(s.stage)}: ${esc(s.why || '')}</span><span class="v">${esc(s.score)}</span>`).join('')}</div></div>`;
+  if (arr(r.automations).length) h += arr(r.automations).map(x => {
+    const row = (k: string, v: any) => (v == null || v === '' || (Array.isArray(v) && !v.length)) ? '' : `<dt>${k}</dt><dd>${Array.isArray(v) ? (k === 'Steps' ? `<ol>${v.map(s => `<li>${esc(s)}</li>`).join('')}</ol>` : v.map(esc).join(', ')) : esc(v)}</dd>`;
+    const c = ['high', 'medium', 'low'].indexOf(x.confidence) > -1 ? x.confidence : 'low';
+    return `<div class="pt-spec"><div class="h"><b>${esc((x.priority ? x.priority + '. ' : '') + (x.name || ''))}</b>${x.confidence ? `<span class="pt-conf ${c}">${esc(x.confidence)}</span>` : ''}</div>
+      <dl>${row('Section', x.section ? String(x.section) : '')}${row('Problem', x.problem)}${row('Trigger', x.trigger)}${row('Steps', x.steps)}${row('Result', x.result)}${row('Tools', x.tools)}${row('AI does', x.ai_role)}${row('Staff approve', x.staff_approve)}${row('Fallback', x.fallback)}${row('Measure', x.metric)}${row('Estimate', x.estimate)}</dl>${evid(x.evidence)}</div>`;
+  }).join('');
+  return h;
 }
 function aiPane() {
-  const a = A!.doc.analysis;
-  return `<section class="pt-card pt-pane pt-ai"><h2>AI analysis</h2>${a
-    ? `<p class="pt-note">Run ${esc(when(a.at))}.${stale() ? ' Answers changed since.' : ''}</p>${a.result && a.result.summary ? `<p>${esc(short(String(a.result.summary), 320))}</p>` : ''}<button class="pt-link" type="button" data-tab="analysis" data-top="1">Open the full analysis</button>`
-    : '<p class="pt-note">Reads every answer, every Extra context box and every not sure mark, then picks the likely services and automations.</p>'}
-    <div data-ai-controls>${aiControls()}</div></section>`;
+  return `<section class="pt-card pt-pane pt-ai" id="ptAi">${aiInner()}</section>`;
 }
-function scoresPane() {
-  const d = A!.doc, s = scores(d);
-  const rows = d.template.stages.filter(st => s[st.id] != null).map(st => `<div class="pt-score"><span>${esc(st.short || st.name)}</span><div class="pt-bar2"><i style="width:${s[st.id]}%"></i></div><span class="v">${s[st.id]}</span><span class="c">${pct(qCoverage(d, st))} answered</span></div>`).join('');
-  return `<section class="pt-card pt-pane"><h2>Where the gains are</h2><p class="pt-note">Opportunity per stage, 0 to 100, from the answers so far.</p>${rows || '<p class="pt-note">Scores show as questions are answered.</p>'}</section>`;
-}
-function servicesPane() {
-  const L = services(A!.doc), secs = A!.doc.template.sections;
-  const list = (n: number) => L.filter(x => x.sec === n).map(x => `<div class="pt-item"><div class="h"><b>${esc(x.n)}</b><span class="pt-conf ${x.fit === 'strong' ? 'high' : x.fit === 'likely' ? 'medium' : 'low'}">${x.fit}</span></div><div class="w">${esc(x.why)}</div></div>`).join('');
-  return `<section class="pt-card pt-pane"><h2>Best-fit services</h2><p class="pt-note">From the answers so far. The AI analysis goes deeper.</p><div class="pt-secl">${esc(secs['1'] || 'Section 1')}</div>${list(1)}<div class="pt-secl">${esc(secs['2'] || 'Section 2')}</div>${list(2)}</section>`;
-}
-function autosPane() {
-  const L = autos(A!.doc);
-  return `<section class="pt-card pt-pane"><h2>Likely automations</h2>${L.length ? L.map(a => `<div class="pt-item"><div class="h"><b>${esc(a.n)}</b><span class="pt-conf ${a.c}">${a.c}</span></div><div class="w">${esc(a.why)}</div>${a.est ? `<div class="e">${esc(a.est)}</div>` : ''}</div>`).join('') : '<p class="pt-note">These show as the answers come in.</p>'}<p class="pt-note">Confidence shows how many of the answers behind each one are in.</p></section>`;
-}
-function baselinePane() {
-  return `<section class="pt-card pt-pane"><h2>Baseline numbers</h2><div class="pt-kv">${baseline(A!.doc).map(([k, v]) => `<span class="k">${esc(k)}</span><span class="v${v == null ? ' miss' : ''}">${v == null ? 'missing' : esc(v)}</span>`).join('')}</div></section>`;
+function aiInner() {
+  return `<div class="pt-aihead"><h3>AI analysis</h3><button class="pt-btn red" type="button" data-act="ai-run"${ai.running ? ' disabled' : ''}>${ai.running ? 'Analysing ' + Math.round(ai.pct) + '%' : 'Analyse with AI'}</button></div>
+    <label class="pt-toggle"><input type="checkbox" data-autoai${autoAi() ? ' checked' : ''}> Re-analyse when I move to the next stage</label>
+    <div class="pt-aistatus">${aiStatus()}</div>${aiProg()}<div class="pt-aiout">${aiOut()}</div>`;
 }
 
 /* ---------- small repaints ---------- */
@@ -434,6 +454,7 @@ function paintTabs() { const el = document.getElementById('ptTabs'); if (!el || 
 function paintBody(focusSel?: string) {
   const el = document.getElementById('ptBody'); if (!el || !A) return;
   el.innerHTML = body();
+  el.querySelectorAll<HTMLTextAreaElement>('textarea.pt-ctx1').forEach(grow);
   if (focusSel) { const f = el.querySelector<HTMLElement>(focusSel); if (f) f.focus({ preventScroll: true }); }
 }
 function paintHead() {
@@ -441,7 +462,10 @@ function paintHead() {
   if (p) p.innerHTML = pills(); if (a) a.innerHTML = actions();
 }
 function paintSave() { const el = document.getElementById('ptSave'); if (el) el.innerHTML = saveText(); }
-function paintAi() { document.querySelectorAll('[data-ai-controls]').forEach(el => { el.innerHTML = aiControls(); }); }
+function paintAi() {
+  const el = document.getElementById('ptAi'); if (el) el.innerHTML = aiInner();
+  document.querySelectorAll<HTMLButtonElement>('#ptBody [data-act="ai-run"]').forEach(b => { b.disabled = ai.running; b.textContent = ai.running ? 'Analysing ' + Math.round(ai.pct) + '%' : 'Analyse with AI'; });
+}
 function live() { clearTimeout(liveTimer); liveTimer = window.setTimeout(() => { paintSide(); paintTabs(); }, 250); }
 
 /* ================= saving ================= */
@@ -451,7 +475,7 @@ function saveText() {
     case 'unsaved': return 'Not saved yet';
     case 'error': return 'Not saved. <button class="pt-link" type="button" data-act="retry">Try again</button>';
     case 'locked': return 'Locked';
-    default: return lastEdit ? 'All changes saved' : '';
+    default: return lastEdit ? 'All changes saved' : 'Saved';
   }
 }
 function setSave(s: SaveState) { saveState = s; paintSave(); }
@@ -499,12 +523,20 @@ function setAnswer(k: string, v: unknown) {
   if (v === '' || v == null || (Array.isArray(v) && !v.length)) { delete d.answers[k]; queue({ answers: { [k]: null } }); }
   else { d.answers[k] = v; queue({ answers: { [k]: v } }); }
 }
+function setUnsure(k: string, on: boolean) {
+  if (on) A!.doc.unsure[k] = true; else delete A!.doc.unsure[k];
+  main.querySelectorAll<HTMLElement>('[data-mark]').forEach(m => { if (m.dataset.mark === k) m.hidden = !on; });
+  main.querySelectorAll<HTMLElement>('[data-unsure-chip]').forEach(b => { if (b.dataset.unsureChip === k) b.setAttribute('aria-pressed', String(on)); });
+  main.querySelectorAll<HTMLInputElement>('input[data-unsure]').forEach(b => { if (b.dataset.unsure === k) b.checked = on; });
+  queue({ unsure: { [k]: on ? true : null } });
+}
+function grow(t: HTMLTextAreaElement) { if (t.classList.contains('pt-ctx1')) { t.style.height = 'auto'; t.style.height = Math.min(t.scrollHeight + 2, 220) + 'px'; } }
 function onInput(e: Event) {
   const t = e.target as HTMLInputElement;
   if (!A || locked() || !t.dataset) return;
   const ds = t.dataset;
   if (ds.k && (ds.t === 'num' || ds.t === 'text' || ds.t === 'long')) { setAnswer(ds.k, ds.t === 'num' ? numVal(t.value) : t.value); return; }
-  if (ds.ctx) { const k = ds.ctx; if (t.value.trim()) A.doc.ctx[k] = t.value; else delete A.doc.ctx[k]; queue({ ctx: { [k]: t.value.trim() ? t.value : null } }); return; }
+  if (ds.ctx) { const k = ds.ctx; grow(t as unknown as HTMLTextAreaElement); if (t.value.trim()) A.doc.ctx[k] = t.value; else delete A.doc.ctx[k]; queue({ ctx: { [k]: t.value.trim() ? t.value : null } }); return; }
   if (ds.task != null && ds.tf) {
     const i = Number(ds.task), d = A.doc; if (!d.tasks[i]) return;
     d.tasks[i] = { ...d.tasks[i], [ds.tf]: t.value } as Task;
@@ -516,16 +548,13 @@ function onInput(e: Event) {
 }
 function onChange(e: Event) {
   const t = e.target as HTMLInputElement;
-  if (!A || locked() || !t.dataset) return;
+  if (!A || !t.dataset) return;
+  if (t.id === 'ptAuditSel') { if (t.value && t.value !== A.meta.id) location.hash = '#/audit/' + encodeURIComponent(t.value); return; }
+  if (t.dataset.autoai != null) { try { localStorage.setItem('pt-autoai', t.checked ? '1' : '0'); } catch { /* storage off */ } return; }
+  if (locked()) return;
   if (t.tagName === 'SELECT' && t.dataset.k) { setAnswer(t.dataset.k, t.value); return; }
-  if (t.dataset.unsure) {
-    const k = t.dataset.unsure;
-    if (t.checked) A.doc.unsure[k] = true; else delete A.doc.unsure[k];
-    main.querySelectorAll<HTMLElement>('[data-mark]').forEach(m => { if (m.dataset.mark === k) m.hidden = !t.checked; });
-    queue({ unsure: { [k]: t.checked ? true : null } });
-  }
+  if (t.dataset.unsure) setUnsure(t.dataset.unsure, t.checked);
 }
-function onToggle(e: Event) { const t = e.target as HTMLElement; if (t && t.classList && t.classList.contains('pt-bizbox')) bizOpen = (t as HTMLDetailsElement).open; }
 
 function setTab(t: string, scroll: boolean) {
   if (!validTab(t)) return;
@@ -589,7 +618,7 @@ function saveComp(i: number) {
 }
 
 async function onClick(e: Event) {
-  const el = (e.target as HTMLElement).closest<HTMLElement>('[data-act],[data-tab],[data-chip],[data-verdict],[data-go],[data-opt]');
+  const el = (e.target as HTMLElement).closest<HTMLElement>('[data-act],[data-tab],[data-chip],[data-verdict],[data-unsure-chip],[data-go],[data-opt]');
   if (!el || !A || !main.contains(el)) return;
   const ds = el.dataset;
 
@@ -606,13 +635,18 @@ async function onClick(e: Event) {
     el.parentElement?.querySelectorAll<HTMLElement>('[data-verdict]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === next)));
     queue({ verdict: { [id]: next } }); return;
   }
+  if (ds.unsureChip) { if (locked()) return; setUnsure(ds.unsureChip, !A.doc.unsure[ds.unsureChip]); return; }
   if (ds.opt) {
     if (locked()) return;
     const id = ds.opt, lv = Number(ds.lv) || 0;
     A.doc.choices[id] = lv; queue({ choices: { [id]: lv } });
     paintBody(`[data-opt="${id}"][data-lv="${lv}"]`); return;
   }
-  if (ds.tab) { setTab(ds.tab, !!ds.top); return; }
+  if (ds.tab) {
+    setTab(ds.tab, !!ds.top);
+    if (ds.next && dev() && autoAi() && !ai.running && answeredCount(A.doc) + checkedCount(A.doc) >= 3) runAi(true);
+    return;
+  }
   if (ds.go) { jump(ds.go); return; }
 
   const act = ds.act, id = A.meta.id;
@@ -646,7 +680,8 @@ async function onClick(e: Event) {
         if (r.existed) toast('Audit ' + (A.meta.number + 1) + ' already exists. Opening it.'); else toast('Audit ' + (A.meta.number + 1) + ' created and shared with the client.');
         location.hash = '#/audit/' + encodeURIComponent(r.id); return;
       }
-      case 'ai-run': runAi(); return;
+      case 'ai-run': runAi(false); return;
+      case 'ai-stop': if (aiCtl) aiCtl.abort(); return;
       case 'task-add': if (locked()) return; A.doc.tasks.push(blankTask()); queue({ tasks: A.doc.tasks }); paintBody(`[data-task="${A.doc.tasks.length - 1}"][data-tf="task"]`); return;
       case 'task-del': if (locked()) return; A.doc.tasks.splice(Number(ds.i), 1); queue({ tasks: A.doc.tasks }); paintBody(); return;
       case 'r-add': editing = 'new:' + ds.g; paintBody('[data-e="t"]'); return;
@@ -668,16 +703,33 @@ async function onClick(e: Event) {
   } catch (x: any) { toast(x && x.message ? x.message : 'Something went wrong. Try again.'); }
 }
 
-/* ================= the AI run: streamed, with live progress ================= */
-async function runAi() {
-  if (!A || ai.running) return;
+/* ================= the AI run: streamed, with live progress and a Stop button ================= */
+function stepOf(t: string) {
+  if (t.indexOf('"ask_next"') > -1) return 'Writing follow-up questions';
+  if (t.indexOf('"automations"') > -1) { const n = (t.match(/"priority"/g) || []).length; return 'Writing build spec ' + Math.max(1, n) + ' of up to 6'; }
+  if (t.indexOf('"services"') > -1) return 'Matching services';
+  if (t.indexOf('"stages"') > -1) return 'Scoring each stage';
+  if (t.indexOf('"money"') > -1) return 'Mapping where the money comes in';
+  return 'Writing the summary';
+}
+async function runAi(quiet: boolean) {
+  if (!A || ai.running || !dev()) return;
+  if (answeredCount(A.doc) + checkedCount(A.doc) < 3) { ai.error = 'Check some research or answer a few questions first.'; paintAi(); return; }
   await flush();
   if (!A) return;
-  const id = A.meta.id, t0 = Date.now();
-  ai = { running: true, text: '', t0, error: '' };
-  paintAi(); clearInterval(aiTick); aiTick = window.setInterval(paintAi, 500);
+  const id = A.meta.id, t0 = Date.now(), prev = A.doc.analysis && A.doc.analysis.result ? JSON.stringify(A.doc.analysis.result).length : 0, expected = Math.max(4000, prev || 9000);
+  ai = { running: true, text: '', t0, error: '', pct: 2, step: quiet ? 'Re-analysing in the background' : 'Reading the audit', secs: 0 };
+  aiCtl = new AbortController();
+  const tick = () => {
+    const got = ai.text.length;
+    ai.secs = Math.round((Date.now() - t0) / 1000);
+    ai.pct = got ? Math.max(ai.pct, Math.min(98, 15 + 83 * got / expected)) : Math.min(14, 2 + ai.secs * 0.6);
+    if (got) ai.step = stepOf(ai.text);
+    paintAi();
+  };
+  paintAi(); clearInterval(aiTick); aiTick = window.setInterval(tick, 500);
   try {
-    const r = await fetch('/api/portal/audits/' + encodeURIComponent(id) + '/analyse', { method: 'POST', credentials: 'same-origin', headers: { 'x-cayenne-portal': '1' } });
+    const r = await fetch('/api/portal/audits/' + encodeURIComponent(id) + '/analyse', { method: 'POST', credentials: 'same-origin', headers: { 'x-cayenne-portal': '1' }, signal: aiCtl.signal });
     if (!r.ok || !r.body) {
       let j: any = null; try { j = await r.json(); } catch { /* not JSON */ }
       throw new Error(j && j.notReady === 'ai' ? 'AI analysis is not switched on yet. It needs the AI key added in Cloudflare settings.' : (j && j.error) || 'The analysis did not run. Try again.');
@@ -695,12 +747,14 @@ async function runAi() {
     if (!end.analysis) throw new Error(end.error === 'unreadable answer' ? 'The answer came back in the wrong shape. Run it again.' : 'The analysis did not finish (' + (end.error || 'no answer') + '). Try again.');
     if (A && A.meta.id === id) {
       A.doc.analysis = end.analysis; basis = t0;
-      toast(end.saved ? 'Analysis ready and saved. It is in the Analysis tab and the PDF.' : 'Analysis shown but not saved. Run it again to save it.', 5000);
+      ai.pct = 100; ai.step = 'Done in ' + Math.round((Date.now() - t0) / 1000) + 's';
+      if (!end.saved) toast('Analysis shown but not saved. Run it again to save it.', 5000);
     }
   } catch (x: any) {
-    ai.error = x && x.message ? x.message : 'The analysis did not run. Try again.';
+    ai.error = x && x.name === 'AbortError' ? 'Analysis stopped. Press Analyse to run it again.' : x && x.message ? x.message : 'The analysis did not run. Try again.';
+    ai.step = x && x.name === 'AbortError' ? 'Stopped' : 'Did not finish';
   } finally {
-    clearInterval(aiTick); ai.running = false;
-    if (A && A.meta.id === id) { paintAi(); paintSide(); paintTabs(); if (tab === 'analysis') paintBody(); }
+    clearInterval(aiTick); ai.running = false; aiCtl = null;
+    if (A && A.meta.id === id) { ai.secs = Math.round((Date.now() - t0) / 1000); paintAi(); live(); }
   }
 }
