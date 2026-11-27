@@ -13,6 +13,8 @@ export const P = env as unknown as PEnv;
 export type Who = { role: 'dev' | 'client'; email: string; name: string; uid: string; client_id?: string; sv: string; exp: number };
 
 const COOKIE = 'cy_portal';
+// portal cookies use their own signing key, so a course sign-in cookie can never pass as a portal one
+const key = () => P.SESSION_SECRET + '|cayenne-portal';
 const DAYS = 14;
 export const nowIso = () => new Date().toISOString();
 export const newId = (p: string) => p + '_' + crypto.randomUUID().replace(/-/g, '').slice(0, 16);
@@ -64,14 +66,14 @@ async function devStamp() { return b64(await sha('dev:' + (P.PORTAL_DEV_PASSWORD
 /* ---------- sessions: a signed cookie, checked against the database on every request ---------- */
 export async function startSession(w: Omit<Who, 'exp'>) {
   const exp = Math.floor(Date.now() / 1000) + DAYS * 86400;
-  const token = await sign({ ...w, exp }, P.SESSION_SECRET!);
+  const token = await sign({ ...w, exp }, key());
   return `${COOKIE}=${encodeURIComponent(token)}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${DAYS * 86400}`;
 }
 export const endSession = () => `${COOKIE}=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`;
 export async function who(req: Request): Promise<Who | null> {
   if (!portalReady()) return null;
-  const w = await unsign<Who>(cookie(req, COOKIE), P.SESSION_SECRET!);
-  if (!w) return null;
+  const w = await unsign<Who>(cookie(req, COOKIE), key());
+  if (!w || (w.role !== 'dev' && w.role !== 'client') || !w.uid) return null;
   if (w.role === 'dev') return w.email === str(P.PORTAL_DEV_EMAIL).toLowerCase() && w.sv === await devStamp() ? w : null;
   const u = await (await db()).prepare('SELECT id, client_id, email, name, sv, disabled FROM portal_users WHERE id = ?').bind(w.uid).first<any>();
   if (!u || u.disabled || String(u.sv) !== w.sv) return null;

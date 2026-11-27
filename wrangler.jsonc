@@ -10,6 +10,9 @@
   // PORTAL_DB keeps the client portal: clients and leads, client logins and audits.
   // Cloudflare creates the database on the first deploy; the portal makes its own tables on first use.
   "d1_databases": [{ "binding": "PORTAL_DB" }],
+  // Previews (test copies built from other branches) need every storage binding spelled out with its ID.
+  // SESSION is the storage Astro adds for its sessions (unused by the site); previews share the live one.
+  "previews": { "kv_namespaces": [{ "binding": "SESSION", "id": "645b98e113c64add99b59cad5928ebf6" }] },
   // the Insights draft is written at 05:00 UTC: 5am in winter, 6am in summer, UK time
   "triggers": { "crons": ["0 5 * * *"] }
 }
