@@ -1,10 +1,12 @@
 // The Cayenne client portal. One page, moved around with the address hash:
 //   #/ or #/leads    developer: leads (businesses being audited); client: their audits
-//   #/clients        developer: current clients
+//   #/clients/...    developer: current clients, from the client automations (clients.ts)
+//   #/clients/audits developer: clients in the portal, with their audits and logins
 //   #/client/<id>    developer: one lead or client, its audits and its logins
 //   #/audit/<id>     the audit itself
 import { api, esc, toast, day, when, copyText, twoStep, onSignedOut, ApiError } from './ui';
 import { openAudit, leaveAudit, flushNow } from './editor';
+import { clientsScreen, clientsHead, leaveClients } from './clients';
 
 type Me = { signedIn: boolean; role?: 'dev' | 'client'; name?: string; email?: string; mustChange?: boolean; clientName?: string };
 type Progress = { questions: number; answered: number; items: number; checked: number; p1: number; p2: number; p3: number; pct: number; analysed: boolean };
@@ -54,14 +56,24 @@ async function loadMe() {
 
 async function route() {
   const my = ++routing;
-  const [a, b] = location.hash.replace(/^#\/?/, '').split('/');
+  const [a, b, c] = location.hash.replace(/^#\/?/, '').split('/');
+  leaveClients();
   if (a !== 'audit') await leaveAudit();
   if (my !== routing) return;
   screenClick = null;
   if (!me.signedIn) return showLogin();
   if (me.role === 'client' && me.mustChange) return showPassword();
   if (a === 'audit' && b) { const m = shell(''); return openAudit(decodeURIComponent(b), me.role === 'dev' ? 'dev' : 'client', m); }
-  if (me.role === 'dev') return a === 'client' && b ? showClient(decodeURIComponent(b)) : showList(a === 'clients' ? 'client' : 'lead');
+  if (me.role === 'dev') {
+    if (a === 'client' && b) return showClient(decodeURIComponent(b));
+    if (a === 'clients' && b === 'audits') return showList('client');
+    if (a === 'clients') {
+      const view = b === 'board' && c ? 'board' : b === 'tasks' || b === 'spend' ? b : 'home';
+      screenClick = clientsScreen(view, decodeURIComponent(c || ''), shell('', 'client'));
+      return;
+    }
+    return showList('lead');
+  }
   return showMine();
 }
 
@@ -174,13 +186,12 @@ async function showList(kind: Kind) {
       <td data-l="Progress">${a ? bar(a) + `<div class="pt-note">${a.p1 + a.p2 + a.p3} still needed${a.p1 ? `, <b class="pt-p1">${a.p1} P1</b>` : ''}</div>` : ''}</td>
       <td data-l="Last change">${esc(cap(when(c.last_audit || c.updated_at)))}</td>
       <td>${a ? `<a class="pt-btn small red" href="#/audit/${encodeURIComponent(a.id)}">Open audit</a>` : ''}</td></tr>`; }).join('');
-  m.innerHTML = `<div class="pt-head"><div><h1>${title}</h1><p class="pt-sub">${L ? 'Businesses being audited before they sign.' : 'Current clients.'}</p></div>
-      <div class="pt-acts">${L ? '<button class="pt-btn" type="button" data-act="import">Import file</button><input type="file" id="ptImport" accept=".json,application/json" hidden>' : ''}<button class="pt-btn red" type="button" data-act="new-client">${L ? 'New lead' : 'New client'}</button></div></div>
-    ${L ? '' : '<div class="pt-banner">The current client dashboard moves in here next.</div>'}
+  const acts = `${L ? '<button class="pt-btn" type="button" data-act="import">Import file</button><input type="file" id="ptImport" accept=".json,application/json" hidden>' : ''}<button class="pt-btn red" type="button" data-act="new-client">${L ? 'New lead' : 'New client'}</button>`;
+  m.innerHTML = `${L ? `<div class="pt-head"><div><h1>${title}</h1><p class="pt-sub">Businesses being audited before they sign.</p></div><div class="pt-acts">${acts}</div></div>` : clientsHead('audits', acts)}
     <section class="pt-card pt-pad pt-gap" id="ptNew" hidden><h2>${L ? 'New lead' : 'New client'}</h2>${clientForm(null, kind)}</section>
     <section class="pt-card">${r.clients.length
       ? `<div class="pt-scroll"><table class="pt-table stack"><thead><tr><th>Business</th><th>Audit</th><th>Progress</th><th>Last change</th><th><span class="pt-sr">Open</span></th></tr></thead><tbody>${rows}</tbody></table></div>`
-      : `<div class="pt-pad"><p>${L ? 'No leads yet. Add one, or import a prepared file.' : 'No clients yet.'}</p></div>`}</section>`;
+      : `<div class="pt-pad"><p>${L ? 'No leads yet. Add one, or import a prepared file.' : 'No clients in the portal yet. A lead you switch to Client shows here, with its audits and logins.'}</p></div>`}</section>`;
 
   const box = document.getElementById('ptNew') as HTMLElement, form = document.getElementById('ptClientForm') as HTMLFormElement, file = document.getElementById('ptImport') as HTMLInputElement;
   screenClick = el => {
@@ -226,7 +237,7 @@ async function showClient(id: string) {
   const users = r.users.map(u => `<div class="pt-item"><div class="h"><b>${esc(u.email)}</b><span class="pt-conf ${u.disabled ? 'low' : u.must_change ? 'medium' : 'high'}">${u.disabled ? 'Switched off' : u.must_change ? 'Not signed in yet' : 'Active'}</span></div>
       <div class="e">${u.name ? esc(u.name) + '. ' : ''}${u.last_login ? 'Last signed in ' + esc(when(u.last_login)) : 'Never signed in'}</div>
       <div class="pt-row pt-tools"><button class="pt-link" type="button" data-act="u-reset" data-u="${esc(u.id)}">New temporary password</button><button class="pt-link" type="button" data-act="${u.disabled ? 'u-on' : 'u-off'}" data-u="${esc(u.id)}">${u.disabled ? 'Switch on' : 'Switch off'}</button></div></div>`).join('');
-  m.innerHTML = `<a class="pt-back" href="${kind === 'client' ? '#/clients' : '#/leads'}">← ${kind === 'client' ? 'Clients' : 'Leads'}</a>
+  m.innerHTML = `<a class="pt-back" href="${kind === 'client' ? '#/clients/audits' : '#/leads'}">← ${kind === 'client' ? 'Clients' : 'Leads'}</a>
     <div class="pt-head"><div><h1>${esc(c.name)}</h1><p class="pt-sub">${c.kind === 'client' ? 'Client' : 'Lead'}${c.contact ? ' · ' + esc(c.contact) : ''}</p></div>
       <div class="pt-acts"><button class="pt-btn red" type="button" data-act="new-audit">New blank audit</button></div></div>
     <div class="pt-grid">
