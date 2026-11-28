@@ -1,6 +1,6 @@
 // The Cayenne client portal. One page, moved around with the address hash:
 //   #/ or #/leads    developer: leads (businesses being audited); client: their audits
-//   #/clients/...    developer: current clients, from the client automations (clients.ts)
+//   #/clients/...    developer: current clients, the client automations as Lucid's Rank SEO page (clients.ts)
 //   #/clients/audits developer: clients in the portal, with their audits and logins
 //   #/client/<id>    developer: one lead or client, its audits and its logins
 //   #/audit/<id>     the audit itself
@@ -56,7 +56,7 @@ async function loadMe() {
 
 async function route() {
   const my = ++routing;
-  const [a, b, c] = location.hash.replace(/^#\/?/, '').split('/');
+  const [a, b, c, d] = location.hash.replace(/^#\/?/, '').split('/');
   leaveClients();
   if (a !== 'audit') await leaveAudit();
   if (my !== routing) return;
@@ -68,8 +68,10 @@ async function route() {
     if (a === 'client' && b) return showClient(decodeURIComponent(b));
     if (a === 'clients' && b === 'audits') return showList('client');
     if (a === 'clients') {
-      const view = b === 'board' && c ? 'board' : b === 'tasks' || b === 'spend' ? b : 'home';
-      screenClick = clientsScreen(view, decodeURIComponent(c || ''), shell('', 'client'));
+      // #/clients/spend[/<month>]; #/clients/<id>[/automations] (the old #/clients/board/<id> still opens it); else the windows
+      const id = b === 'board' ? c : b, sub = b === 'board' ? d : c;
+      const view = b === 'spend' ? 'spend' : id && id !== 'tasks' ? 'client' : 'home';
+      screenClick = clientsScreen(view, decodeURIComponent((view === 'spend' ? c : id) || ''), sub || '', shell('', 'client'));
       return;
     }
     return showList('lead');
